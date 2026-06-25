@@ -1,0 +1,34 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev && rm -rf /var/lib/apt/lists/*
+
+# Install k6 for load testing from within container
+RUN apt-get update && apt-get install -y curl && \
+    curl -fsSL https://dl.k6.io/key.gpg | gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | tee /etc/apt/sources.list.d/k6.list && \
+    apt-get update && apt-get install -y k6 && rm -rf /var/lib/apt/lists/*
+
+# Install all Python dependencies
+COPY agents/requirements.txt /tmp/agents_req.txt
+COPY persistence/requirements.txt /tmp/persist_req.txt
+COPY loadtest/requirements.txt /tmp/loadtest_req.txt
+COPY orchestrator/requirements.txt /tmp/orch_req.txt
+
+RUN pip install --no-cache-dir \
+    -r /tmp/agents_req.txt \
+    -r /tmp/persist_req.txt \
+    -r /tmp/loadtest_req.txt \
+    -r /tmp/orch_req.txt
+
+# Copy all source
+COPY agents/ ./agents/
+COPY persistence/ ./persistence/
+COPY loadtest/ ./loadtest/
+COPY orchestrator/ ./orchestrator/
+
+WORKDIR /app/orchestrator
+
+EXPOSE 8080
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]

@@ -1,0 +1,29 @@
+# Secrets — never commit real credentials
+.env
+.env.*
+!.env.example
+infra/alibaba/.ecs_instance_id
+infra/alibaba/.rds_instance_id
+infra/alibaba/*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+*.venv
+
+# Node / dashboard
+node_modules/
+dashboard/build/
+npm-debug.log*
+
+# OS / editor cruft
+.DS_Store
+.vscode/
+.idea/
+
+# Logs and ad-hoc artifacts
+*.log

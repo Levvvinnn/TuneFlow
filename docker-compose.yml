@@ -1,0 +1,110 @@
+version: "3.9"
+
+services:
+  # ── Databases ─────────────────────────────────────────────────────────────
+  service-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: service_user
+      POSTGRES_PASSWORD: service_pass
+      POSTGRES_DB: service_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - service_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U service_user -d service_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  persistence-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: persist_user
+      POSTGRES_PASSWORD: persist_pass
+      POSTGRES_DB: persistence_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - persist_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U persist_user -d persistence_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Service under test ────────────────────────────────────────────────────
+  service:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.service
+    environment:
+      SERVICE_DB_URL: postgresql+asyncpg://service_user:service_pass@service-db:5432/service_db
+      INITIAL_POOL_SIZE: "5"
+      INITIAL_QUERY_TIMEOUT_MS: "5000"
+      INITIAL_CACHE_TTL_SECONDS: "60"
+      INITIAL_BATCH_SIZE: "100"
+      INITIAL_RETRY_INTERVAL_MS: "100"
+    ports:
+      - "8000:8000"
+    depends_on:
+      service-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ── Seed job (runs once, exits) ───────────────────────────────────────────
+  seed:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.service
+    environment:
+      SERVICE_DB_URL: postgresql+asyncpg://service_user:service_pass@service-db:5432/service_db
+    command: python seed.py
+    depends_on:
+      service:
+        condition: service_healthy
+    restart: "no"
+
+  # ── Orchestrator + agents ─────────────────────────────────────────────────
+  orchestrator:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.orchestrator
+    env_file:
+      - .env
+    environment:
+      SERVICE_HOST: http://service:8000
+      SERVICE_DB_URL: postgresql+asyncpg://service_user:service_pass@service-db:5432/service_db
+      PERSISTENCE_DB_URL: postgresql+asyncpg://persist_user:persist_pass@persistence-db:5432/persistence_db
+    ports:
+      - "8080:8080"
+    depends_on:
+      service:
+        condition: service_healthy
+      persistence-db:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+
+  # ── Dashboard ─────────────────────────────────────────────────────────────
+  dashboard:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./dashboard:/app
+    environment:
+      REACT_APP_ORCHESTRATOR_URL: http://localhost:8080
+    ports:
+      - "3000:3000"
+    command: sh -c "npm install && npm start"
+    depends_on:
+      - orchestrator
+
+volumes:
+  service_db_data:
+  persist_db_data:
