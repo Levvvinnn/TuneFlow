@@ -271,6 +271,7 @@ async def compare_runs(run_a: str, run_b: str):
                 {
                     "iteration_number": it.iteration_number,
                     "p95_latency_ms": (it.metrics or {}).get("p95_latency_ms"),
+                    "p99_latency_ms": (it.metrics or {}).get("p99_latency_ms"),
                     "throughput_rps": (it.metrics or {}).get("throughput_rps"),
                     "error_rate": (it.metrics or {}).get("error_rate"),
                     "config_applied": it.config_applied,
