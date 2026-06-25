@@ -114,15 +114,13 @@ a single Qwen call that does diagnose + propose in one shot, using qwen-plus wit
 no inter-agent negotiation. This gives the dashboard's Compare tab a fair head-to-head
 convergence comparison.
 
-## Architecture Diagram Image
+## Architecture Diagram
 
-**TODO:** Generate `docs/architecture.png` from the above using draw.io, Mermaid Live,
-or Excalidraw. The image should show the two logical halves with labeled arrows for:
-- Dashboard ↔ Orchestrator (HTTP REST)
-- Orchestrator → LangGraph nodes (function calls)
-- Agents ↔ Qwen Cloud (HTTPS API)
-- Judge Agent → Service /admin/reconfigure (HTTP)
-- Judge Agent → k6 subprocess (shell)
-- Service → Service DB (asyncpg)
-- Persist Node → Persistence DB (asyncpg)
-- ECS → ApsaraDB (internal VPC)
+![TuneFlow Architecture](architecture.png)
+
+Diagram source: [`architecture.mmd`](architecture.mmd) (Mermaid flowchart).
+
+Re-render command (from repo root):
+```bash
+npx @mermaid-js/mermaid-cli -i docs/architecture.mmd -o docs/architecture.png -b "#0f1117" -w 1400 -H 900
+```

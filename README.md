@@ -32,51 +32,10 @@ TuneFlow is a society of specialized agents that negotiate over backend configur
 
 ## Architecture
 
-```
-┌─────────────┐         ┌──────────────────────────────────────────────┐
-│  Dashboard  │◄───────►│  Orchestrator API (:8080)                    │
-│  React +    │         │  Start run / poll status / fetch history      │
-│  recharts   │         └────────────┬─────────────────────────────────┘
-└─────────────┘                      │
-                                     ▼
-                          ┌──────────────────────┐
-                          │   LangGraph Graph     │
-                          │                       │
-                          │  ┌─────────────────┐  │      ┌──────────────────┐
-                          │  │  Config Agent   │  │      │   Qwen Cloud     │
-                          │  └────────┬────────┘  │◄────►│                  │
-                          │           ▼            │      │ text model:      │
-                          │  ┌─────────────────┐  │      │   qwen-plus      │
-                          │  │  Judge Agent    │  │      │ optimizer model: │
-                          │  │  (apply+test+   │  │      │   qwen-max       │
-                          │  │   diagnose+veto)│  │      │ vision model:    │
-                          │  └────────┬────────┘  │      │   qwen-vl-plus   │
-                          │           ▼            │      └──────────────────┘
-                          │  ┌─────────────────┐  │
-                          │  │ Optimizer Agent │  │
-                          │  └────────┬────────┘  │
-                          │           ▼            │
-                          │  ┌─────────────────┐  │
-                          │  │   Veto Node     │  │
-                          │  │ (1-round limit) │  │
-                          │  └────────┬────────┘  │
-                          │           ▼            │
-                          │  ┌─────────────────┐  │
-                          │  │  Terminate Node │  │
-                          │  └─────────────────┘  │
-                          └──────────┬────────────┘
-                                     │
-              ┌──────────────────────┼───────────────────────┐
-              ▼                      ▼                        ▼
-   ┌─────────────────┐   ┌─────────────────────┐  ┌──────────────────────┐
-   │ Service Under   │   │  Persistence DB     │  │  Alibaba Cloud       │
-   │ Test (:8000)    │   │  (run/iteration     │  │                      │
-   │ FastAPI +       │   │   history, jsonb)   │  │  ECS (service+orch)  │
-   │ PostgreSQL      │   └─────────────────────┘  │  ApsaraDB PostgreSQL │
-   └─────────────────┘                            └──────────────────────┘
-```
+![TuneFlow Architecture](docs/architecture.png)
 
-> **TODO:** Replace this ASCII diagram with a rendered diagram image (`docs/architecture.png`) once the system is stable. Export from draw.io, Mermaid live, or Excalidraw showing the same components. Place the image here: `![Architecture](docs/architecture.png)`
+> The diagram source is [`docs/architecture.mmd`](docs/architecture.mmd) (Mermaid). Re-render with:
+> `npx @mermaid-js/mermaid-cli -i docs/architecture.mmd -o docs/architecture.png -b "#0f1117" -w 1400 -H 900`
 
 ---
 
@@ -258,28 +217,11 @@ python infra/alibaba/verify_deployment.py
 
 ## Demo Video
 
-> **TODO:** Record a ~3-minute demo video showing:
-> 1. The dashboard launching a multi-agent run and a baseline run
-> 2. The live convergence chart updating across iterations
-> 3. A veto event visible in the iteration table
-> 4. The Compare tab showing the side-by-side efficiency improvement
->
-> **Upload link:** `[Demo Video — to be added]`
->
-> **Alibaba Cloud deployment proof recording:** `[Deployment Recording — to be added]`
+See [`docs/demo_script.md`](docs/demo_script.md) for the shot-by-shot recording guide.
 
----
+**Upload link:** `[Demo Video — to be added after recording]`
 
-## Architecture Diagram
-
-> **TODO:** Generate a polished architecture diagram using draw.io, Mermaid, or Excalidraw
-> showing the components in the ASCII diagram above. Save as `docs/architecture.png` and
-> replace the ASCII diagram in this README with:
-> `![TuneFlow Architecture](docs/architecture.png)`
->
-> The diagram should show two logical halves:
-> - **Left:** Dashboard ↔ Orchestrator ↔ LangGraph Agents ↔ Qwen Cloud
-> - **Right:** Service Under Test ↔ Service Postgres / ApsaraDB ↔ Alibaba Cloud ECS
+**Alibaba Cloud deployment proof recording:** `[Deployment Recording — to be added]`
 
 ---
 

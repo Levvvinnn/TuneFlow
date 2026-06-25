@@ -1,0 +1,93 @@
+%%{init: {'theme': 'dark', 'themeVariables': {'fontSize': '14px'}}}%%
+flowchart TD
+    subgraph UI["🖥️ User Interface"]
+        DASH["Dashboard\nReact + recharts\n:3000\n─────────────────\nRun tab · History tab\nCompare tab"]
+    end
+
+    subgraph ORCH_BOX["⚙️ Orchestrator API :8080"]
+        ORCH["POST /runs\nGET /runs/{id}/status\nGET /runs/{id}/history\nGET /compare"]
+    end
+
+    subgraph AGENTS["🤖 LangGraph Agent Graph"]
+        CFG["Config Agent\nqwen-plus\n─────────────\nIteration 1: initial config\nLater: targeted change"]
+        JUDGE["Judge Agent\nqwen-plus · qwen-vl-plus\n─────────────\nApply config\nRun k6 load test\nText diagnosis\nVision diagnosis\nHolds veto power"]
+        OPT["Optimizer Agent\nqwen-max\n─────────────\nPropose next change\nRevise on veto\n(1 retry max)"]
+        VETO["Veto Node\n─────────────\nCheck safety constraints\nAllow 1 revision\nForced fallback"]
+        PERSIST["Persist Node\n─────────────\nWrite iteration to\nPersistence DB"]
+        TERM["Terminate Node\n─────────────\ntarget_hit\nplateau-N\nmax_iterations"]
+        BASELINE["Baseline God-Agent\nqwen-plus\n─────────────\nSingle call/iter:\ndiagnose + propose"]
+    end
+
+    subgraph QWEN["☁️ Qwen Cloud API"]
+        QT["qwen-plus\nText / reasoning"]
+        QM["qwen-max\nOptimizer decisions"]
+        QV["qwen-vl-plus\nChart vision analysis"]
+    end
+
+    subgraph SVC["🐳 Service Under Test :8000"]
+        SVC_APP["FastAPI\n─────────────\nGET /users/{id}\nGET /products/search\nPOST /orders/\nGET /orders/{id}\nPOST /admin/reconfigure\nPOST /admin/reset-data\nGET /admin/db-stats"]
+        K6["k6 Load Test\n50–200 VUs\nMixed CRUD pattern"]
+    end
+
+    subgraph DBS["🗄️ Databases"]
+        SVCDB["Service DB\nPostgres :5432\n─────────────\nusers 2k\nproducts 5k\norders 10k\norder_items"]
+        PERSISTDB["Persistence DB\nPostgres :5433\n─────────────\nruns\niterations\nconfig · metrics\njudge_analysis\nveto_events"]
+    end
+
+    subgraph ALI["☁️ Alibaba Cloud"]
+        ECS["ECS Instance\necs.c6.xlarge\nDocker host"]
+        RDS["ApsaraDB RDS\nPostgreSQL 15\nManaged DB"]
+    end
+
+    %% UI ↔ Orchestrator
+    DASH <-->|"HTTP REST"| ORCH
+
+    %% Orchestrator → Agents
+    ORCH -->|"background task"| CFG
+    ORCH -->|"background task"| BASELINE
+
+    %% Multi-agent graph flow
+    CFG --> JUDGE
+    JUDGE --> OPT
+    OPT --> VETO
+    VETO -->|"revision if vetoed"| OPT
+    VETO --> PERSIST
+    PERSIST --> TERM
+    TERM -->|"not done"| CFG
+
+    %% Agents ↔ Qwen Cloud
+    CFG <-->|"propose config"| QT
+    JUDGE <-->|"text diagnosis"| QT
+    JUDGE <-->|"chart image"| QV
+    OPT <-->|"tradeoff decision"| QM
+    BASELINE <-->|"diagnose+propose"| QT
+
+    %% Judge ↔ Service
+    JUDGE -->|"POST /admin/reconfigure\nhot-swap pool"| SVC_APP
+    JUDGE -->|"trigger"| K6
+    K6 -->|"p95/p99/rps\nerror_rate"| JUDGE
+
+    %% Service ↔ DB
+    SVC_APP <-->|"asyncpg"| SVCDB
+
+    %% Persist Node ↔ Persistence DB
+    PERSIST -->|"save iteration\nconfig·metrics·veto"| PERSISTDB
+    ORCH <-->|"read history"| PERSISTDB
+
+    %% Alibaba Cloud
+    ECS -.->|"hosts"| SVC_APP
+    ECS -.->|"hosts"| ORCH
+    RDS -.->|"managed"| SVCDB
+
+    %% Styles
+    classDef agentNode fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    classDef infraNode fill:#1a1a2e,stroke:#6366f1,color:#e2e8f0
+    classDef qwenNode fill:#0c2340,stroke:#06b6d4,color:#e2e8f0
+    classDef dbNode fill:#1c2814,stroke:#22c55e,color:#e2e8f0
+    classDef aliNode fill:#2d1b00,stroke:#f97316,color:#e2e8f0
+
+    class CFG,JUDGE,OPT,VETO,PERSIST,TERM,BASELINE agentNode
+    class SVC_APP,K6,DASH,ORCH infraNode
+    class QT,QM,QV qwenNode
+    class SVCDB,PERSISTDB dbNode
+    class ECS,RDS aliNode

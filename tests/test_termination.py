@@ -1,6 +1,6 @@
 """Tests for shared termination logic — target/plateau/max-iterations each independently triggerable."""
 import pytest
-from agents.termination import check_termination, score_from_metrics
+from termination import check_termination, score_from_metrics
 
 
 def test_target_hit():

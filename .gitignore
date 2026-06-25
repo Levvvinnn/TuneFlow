@@ -25,5 +25,9 @@ npm-debug.log*
 .vscode/
 .idea/
 
+# Claude Code internal files
+.claude/
+CLAUDE_CODE_FINISH_PROMPT.md
+
 # Logs and ad-hoc artifacts
 *.log
