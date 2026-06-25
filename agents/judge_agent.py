@@ -123,24 +123,34 @@ Return a JSON object with:
 async def diagnose_vision(chart_path: str, metrics: dict) -> dict:
     """Vision-based diagnosis using rendered chart image — adds a second signal."""
     prompt = f"""
-This chart shows performance metrics (p95 latency, throughput, error rate) across
-multiple tuning iterations for a FastAPI + PostgreSQL service.
+This chart has three stacked panels for a FastAPI + PostgreSQL service across multiple
+tuning iterations, top to bottom: (1) Latency — p95 and p99, (2) Throughput — req/s,
+(3) Error Rate — %.
 
 Latest metrics for context:
 - p95 latency: {metrics.get('p95_latency_ms', 'N/A')} ms
 - throughput: {metrics.get('throughput_rps', 'N/A')} req/s
 - error rate: {metrics.get('error_rate', 'N/A')}
 
-Analyze the VISUAL PATTERN of the charts:
-1. Is latency trending down (improving), up (degrading), or oscillating?
-2. Does throughput show a step-change or a gradual improvement?
-3. Are error spikes visible and when do they occur?
-4. What does the visual pattern suggest about the tuning direction?
+Analyze each panel SEPARATELY — do not let one panel's shape bleed into another
+field's label. In particular, `visual_pattern` below describes the LATENCY panel only
+(it is latency, not throughput, that is being optimized) and must agree with
+`latency_trend`: e.g. if latency_trend is "degrading", visual_pattern must be a
+decline/worsening shape, never an "_improvement" label, even if throughput happens to
+be improving in its own panel.
+
+1. Latency panel: is it trending down (improving), up (degrading), or oscillating? Is
+   the change gradual or a sudden step?
+2. Throughput panel: step-change or gradual change, and in which direction?
+3. Error-rate panel: are spikes visible, and when do they occur?
+4. What does the overall picture suggest about the tuning direction?
 
 Return a JSON object with:
-  visual_pattern: str (e.g., "slow_decline", "sudden_step_improvement", "oscillating",
-                   "flat", "spike_then_recovery")
-  latency_trend: str ("improving" | "degrading" | "oscillating" | "flat")
+  visual_pattern: str — shape of the LATENCY panel only, one of: "gradual_decline"
+                   (improving), "gradual_increase" (degrading), "sudden_step_improvement",
+                   "sudden_step_regression", "oscillating", "flat", "spike_then_recovery"
+  latency_trend: str ("improving" | "degrading" | "oscillating" | "flat") — must agree
+                   with visual_pattern's direction
   throughput_trend: str ("improving" | "degrading" | "oscillating" | "flat")
   error_pattern: str ("none" | "spikes" | "steady" | "declining")
   visual_insight: str (1-2 sentences: what the visual pattern suggests for next step)
