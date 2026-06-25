@@ -52,6 +52,11 @@ export let options = {
     http_req_duration: ["p(95)<2000", "p(99)<5000"],
     error_rate: ["rate<0.05"],
   },
+  // k6's default summary export only includes avg/min/med/max/p(90)/p(95).
+  // p(99) is checked in thresholds above but was never being exported, so
+  // runner.py's p99_latency_ms always silently read as 0.0. Explicitly
+  // request it here so the real value actually reaches the summary JSON.
+  summaryTrendStats: ["avg", "min", "med", "max", "p(90)", "p(95)", "p(99)"],
 };
 
 // Realistic query terms
