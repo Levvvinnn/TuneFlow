@@ -24,7 +24,12 @@ class Run(Base):
     load_repeats: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     finished_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
-    termination_reason: Mapped[str] = mapped_column(String(100), nullable=True)
+    # Text, not VARCHAR(100): this column holds both short labels
+    # ("max_iterations", "plateau") and full exception messages from a failed
+    # agent node (e.g. an httpx "403 Forbidden for url ..." error), which
+    # routinely exceed 100 characters and previously crashed fail_run() with
+    # a StringDataRightTruncationError, masking the real failure a second time.
+    termination_reason: Mapped[str] = mapped_column(Text, nullable=True)
 
 
 class Iteration(Base):

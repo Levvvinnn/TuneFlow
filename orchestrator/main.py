@@ -75,6 +75,7 @@ class RunStatusResponse(BaseModel):
     max_iterations: int
     termination_reason: Optional[str]
     latest_score: Optional[float]
+    error: Optional[str] = None
 
 
 class IterationResponse(BaseModel):
@@ -116,7 +117,18 @@ async def _run_multi_agent_bg(run_id: str, req: StartRunRequest):
             load_repeats=req.load_repeats,
             save_iteration_fn=_status_update_save_fn,
         )
-        reason = final.get("termination_reason", "completed")
+        if final.get("error"):
+            # The graph caught its own exception in a node (config/judge/optimizer)
+            # and routed straight to END, bypassing persist/terminate. That is a
+            # failed run, not a finished one — surface it as such instead of
+            # reporting "finished" with a null termination_reason.
+            err = final["error"]
+            await fail_run(uuid.UUID(run_id), err)
+            _run_status[run_id]["status"] = "failed"
+            _run_status[run_id]["error"] = err
+            return
+
+        reason = final.get("termination_reason") or "completed"
         await finish_run(uuid.UUID(run_id), reason)
         _run_status[run_id]["status"] = "finished"
         _run_status[run_id]["termination_reason"] = reason
@@ -147,7 +159,14 @@ async def _run_baseline_bg(run_id: str, req: StartRunRequest):
             load_repeats=req.load_repeats,
             save_iteration_fn=_status_save_fn,
         )
-        reason = result.get("termination_reason", "completed")
+        if result.get("error"):
+            err = result["error"]
+            await fail_run(uuid.UUID(run_id), err)
+            _run_status[run_id]["status"] = "failed"
+            _run_status[run_id]["error"] = err
+            return
+
+        reason = result.get("termination_reason") or "completed"
         await finish_run(uuid.UUID(run_id), reason)
         _run_status[run_id]["status"] = "finished"
         _run_status[run_id]["termination_reason"] = reason
@@ -199,6 +218,7 @@ async def get_run_status(run_id: str):
         max_iterations=run.max_iterations,
         termination_reason=mem.get("termination_reason", run.termination_reason),
         latest_score=mem.get("latest_score"),
+        error=mem.get("error"),
     )
 
 

@@ -33,10 +33,33 @@ async def seed_database():
         await session.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
         await session.commit()
 
-    # Create tables
+    # Create tables. Base alone has no tables attached to its metadata — the
+    # User/Product/Order/OrderItem classes in models.py are what actually register
+    # tables onto Base.metadata, and that registration only happens as a side effect
+    # of importing that module. Without this import, create_all silently creates
+    # nothing (no error) and every insert below fails with UndefinedTableError.
     from database import Base
+    from models import User, Product, Order, OrderItem  # noqa: F401
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    # Idempotency guard: this is a one-shot Compose job, but `docker-compose up`
+    # re-runs it on every invocation to satisfy orchestrator's
+    # `depends_on: seed: condition: service_completed_successfully` — even when
+    # the DB already has data from a prior run. Re-seeding on top of existing
+    # rows is unsafe: Faker's `.unique` namespace only guarantees uniqueness
+    # within a single process, so a second run can generate a username/email
+    # that collides with an already-seeded row. ON CONFLICT DO NOTHING then
+    # silently drops that insert, but this script still remembers that user's
+    # generated UUID and may reference it from a later order — producing a
+    # foreign key that was never actually written (the bug that just happened).
+    # Skip entirely if the database is already populated.
+    async with factory() as session:
+        existing = await session.execute(text("SELECT COUNT(*) FROM users"))
+        if existing.scalar() > 0:
+            print("Database already seeded — skipping.")
+            await engine.dispose()
+            return
 
     async with factory() as session:
         print(f"Seeding {NUM_USERS} users...")

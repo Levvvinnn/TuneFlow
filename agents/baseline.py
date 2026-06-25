@@ -114,6 +114,7 @@ async def run_baseline(
     iteration_history = []
     termination_reason = None
     last_metrics = None
+    error = None
 
     for iteration_number in range(1, max_iterations + 1):
         print(f"[baseline] Iteration {iteration_number}/{max_iterations}")
@@ -122,7 +123,8 @@ async def run_baseline(
         try:
             await apply_config(current_config)
         except Exception as e:
-            print(f"[baseline] Config apply failed: {e}")
+            print(f"[baseline] Config apply failed: {e}", flush=True)
+            error = f"Config apply failed: {e}"
             break
 
         # Run load test
@@ -135,7 +137,8 @@ async def run_baseline(
             )
             last_metrics = m.to_dict()
         except Exception as e:
-            print(f"[baseline] Load test failed: {e}")
+            print(f"[baseline] Load test failed: {e}", flush=True)
+            error = f"Load test failed: {e}"
             break
 
         # Single god-agent call: diagnose + propose
@@ -147,7 +150,7 @@ async def run_baseline(
                 iteration_number=iteration_number,
             )
         except Exception as e:
-            print(f"[baseline] God agent failed: {e}")
+            print(f"[baseline] God agent failed: {e}", flush=True)
             decision = {"bottleneck": "error", "diagnosis": str(e), "next_config": current_config}
 
         score = score_from_metrics(last_metrics)
@@ -196,8 +199,12 @@ async def run_baseline(
         "run_id": run_id,
         "mode": "baseline",
         "total_iterations": len(iteration_history),
-        "termination_reason": termination_reason or "max_iterations",
+        # Only fall back to "max_iterations" when the loop actually ran to
+        # completion without a hard error — an error that broke the loop early
+        # should never be silently relabeled as a normal termination reason.
+        "termination_reason": termination_reason or ("max_iterations" if error is None else None),
         "final_config": current_config,
         "final_score": scores[-1] if scores else None,
         "scores": scores,
+        "error": error,
     }

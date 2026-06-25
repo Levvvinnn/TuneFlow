@@ -73,6 +73,7 @@ async def config_node(state: AgentState) -> dict:
             )
         return {"proposed_config": proposed, "error": None}
     except Exception as e:
+        print(f"[config_node] ERROR: {e}", flush=True)
         return {"error": f"Config Agent failed: {e}"}
 
 
@@ -93,6 +94,7 @@ async def judge_node(state: AgentState) -> dict:
             "error": None,
         }
     except Exception as e:
+        print(f"[judge_node] ERROR: {e}", flush=True)
         return {"error": f"Judge Agent failed: {e}"}
 
 
@@ -107,6 +109,7 @@ async def optimizer_node(state: AgentState) -> dict:
         )
         return {"optimizer_proposal": proposal, "error": None}
     except Exception as e:
+        print(f"[optimizer_node] ERROR: {e}", flush=True)
         return {"error": f"Optimizer Agent failed: {e}"}
 
 

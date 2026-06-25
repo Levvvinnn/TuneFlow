@@ -24,6 +24,23 @@ QWEN_VISION_MODEL = os.getenv("QWEN_VISION_MODEL", "qwen-vl-plus")
 TIMEOUT = 120.0
 
 
+def _raise_with_body(resp: httpx.Response) -> None:
+    """Like resp.raise_for_status(), but includes the response body in the
+    exception message. httpx's default HTTPStatusError text is just
+    "Client error '403 Forbidden' for url '...'" — it discards the body,
+    which is exactly where DashScope puts the actual reason (bad model id,
+    expired key, no quota, workspace mismatch, etc). Without this, a 403
+    is unactionable; with it, the real cause shows up in the logs directly.
+    """
+    if resp.status_code >= 400:
+        body = resp.text[:2000]
+        raise httpx.HTTPStatusError(
+            f"{resp.status_code} {resp.reason_phrase} for url '{resp.url}' — response body: {body}",
+            request=resp.request,
+            response=resp,
+        )
+
+
 def _client() -> httpx.AsyncClient:
     return httpx.AsyncClient(
         base_url=QWEN_BASE_URL,
@@ -62,7 +79,7 @@ async def text_completion(
 
     async with _client() as client:
         resp = await client.post("/chat/completions", json=payload)
-        resp.raise_for_status()
+        _raise_with_body(resp)
         data = resp.json()
         return data["choices"][0]["message"]["content"]
 
@@ -134,7 +151,7 @@ async def vision_completion(
 
     async with _client() as client:
         resp = await client.post("/chat/completions", json=payload)
-        resp.raise_for_status()
+        _raise_with_body(resp)
         data = resp.json()
         return data["choices"][0]["message"]["content"]
 
