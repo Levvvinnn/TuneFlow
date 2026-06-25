@@ -60,17 +60,26 @@ class AgentState(TypedDict):
 # ── Node implementations ──────────────────────────────────────────────────────
 
 async def config_node(state: AgentState) -> dict:
-    """Propose next config (initial or targeted change)."""
+    """Decide this iteration's config.
+
+    Iteration 1: ask the Config Agent for an initial config.
+
+    Iteration > 1: apply state["proposed_config"] directly — this is the
+    Optimizer's final_decision from the end of the previous iteration,
+    already passed through veto_node's safety check, carried forward by
+    terminate_node. Do NOT re-derive a fresh proposal from
+    state["current_config"] here: current_config at this point is the config
+    that was just *measured* last iteration, not what was actually *decided*
+    for next time, and a second independent Config Agent call would silently
+    discard the Optimizer's veto-checked decision and apply its own
+    unchecked number instead (this was a real bug — see task #20).
+    """
     iteration = state["iteration_number"]
     try:
         if iteration == 1:
             proposed = await cfg_agent.propose_initial_config()
         else:
-            proposed = await cfg_agent.propose_config_change(
-                current_config=state["current_config"],
-                judge_analysis=state.get("judge_output", {}).get("text_diagnosis", {}),
-                iteration_history=state["iteration_history"],
-            )
+            proposed = state.get("proposed_config") or state["current_config"]
         return {"proposed_config": proposed, "error": None}
     except Exception as e:
         print(f"[config_node] ERROR: {e}", flush=True)
