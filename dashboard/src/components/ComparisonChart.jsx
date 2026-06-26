@@ -1,6 +1,6 @@
 /**
  * Side-by-side convergence chart: multi-agent run vs baseline.
- * This is the primary Track 3 proof chart.
+ * This is the primary head-to-head proof chart.
  */
 import React from "react";
 import {

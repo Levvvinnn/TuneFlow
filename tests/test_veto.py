@@ -1,6 +1,6 @@
 """
 Tests for Judge Agent veto logic and round-limit enforcement.
-Tests run without Qwen API calls by mocking the optimizer revision function.
+Tests run without Fireworks API calls by mocking the optimizer revision function.
 """
 import asyncio
 import sys

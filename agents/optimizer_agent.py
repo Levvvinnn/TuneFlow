@@ -1,13 +1,13 @@
 """
 Optimizer Agent:
   - Takes Judge's text + vision analysis
-  - Proposes the next config change (using the stronger Qwen model)
+  - Proposes the next config change (using the stronger Fireworks optimizer model)
   - Handles veto by revising the proposal (bounded to exactly 1 retry)
 """
 import json
 
 from config_agent import PARAM_BOUNDS, clamp_config
-from qwen_client import optimizer_completion
+from fireworks_client import optimizer_completion
 
 SYSTEM = (
     "You are a backend performance optimization strategist. "

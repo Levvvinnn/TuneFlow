@@ -8,7 +8,7 @@ safety-checked by veto_node before being applied — see agents/graph.py.
 import json
 from typing import Optional
 
-from qwen_client import config_agent_completion
+from fireworks_client import config_agent_completion
 
 SYSTEM = (
     "You are a backend configuration specialist. Your job is to propose database "

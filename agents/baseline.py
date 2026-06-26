@@ -1,9 +1,9 @@
 """
-Baseline "god agent" mode — a single Qwen call per iteration that does
+Baseline "god agent" mode — a single Fireworks AI call per iteration that does
 propose + diagnose + decide in one shot. Runs with the same iteration budget,
 load pattern, and termination logic as the multi-agent run.
 
-This is the single-agent baseline for Track 3 head-to-head comparison.
+This is the single-agent baseline for the head-to-head comparison.
 """
 import asyncio
 import json
@@ -19,7 +19,7 @@ import httpx
 from runner import run_load_test_with_repeats
 
 from config_agent import DEFAULT_CONFIG, PARAM_BOUNDS, clamp_config
-from qwen_client import baseline_god_agent_completion
+from fireworks_client import baseline_god_agent_completion
 from termination import check_termination, score_from_metrics
 
 SERVICE_URL = os.getenv("SERVICE_HOST", "http://localhost:8000")
@@ -46,7 +46,7 @@ async def god_agent_step(
     iteration_history: list[dict],
     iteration_number: int,
 ) -> dict:
-    """Single Qwen call: diagnose + propose next config in one shot."""
+    """Single Fireworks AI call: diagnose + propose next config in one shot."""
     history_summary = [
         {
             "iter": h.get("iteration_number"),

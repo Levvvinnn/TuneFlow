@@ -64,7 +64,7 @@ export default function App() {
     <div style={S.app}>
       <header style={S.header}>
         <div style={S.logo}>TuneFlow</div>
-        <div style={S.tag}>Self-Tuning Backend Agent · Track 3: Agent Society</div>
+        <div style={S.tag}>Self-Tuning Backend Agent · AMD Developer Hackathon: ACT II</div>
         <nav style={S.nav}>
           {NAV.map((t) => (
             <button key={t} style={S.navBtn(tab === t)} onClick={() => setTab(t)}>{t}</button>

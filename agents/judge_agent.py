@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "loadtest"))
 from runner import run_load_test_with_repeats
 
 from chart import render_performance_chart
-from qwen_client import text_completion, vision_completion
+from fireworks_client import text_completion, vision_completion
 
 SERVICE_URL = os.getenv("SERVICE_HOST", "http://localhost:8000")
 

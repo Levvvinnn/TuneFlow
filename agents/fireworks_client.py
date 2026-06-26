@@ -1,6 +1,12 @@
 """
-Centralized Qwen Cloud API client.
+Centralized Fireworks AI API client.
 All text and vision calls route through here. Model identifiers come from env vars.
+
+Fireworks AI's inference platform runs on AMD GPUs (MI300X-class hardware) — this is
+the project's "Use of AMD Platforms" path for the AMD Developer Hackathon: ACT II
+(Unicorn Track): the multi-agent system's actual reasoning — the Judge's diagnosis and
+the Optimizer's tuning decisions — executes on AMD-hosted inference, not just on a
+laptop CPU.
 """
 import base64
 import json
@@ -10,16 +16,22 @@ from typing import Any, Optional
 
 import httpx
 
-QWEN_API_KEY = os.getenv("QWEN_API_KEY", "")
-QWEN_BASE_URL = os.getenv(
-    "QWEN_BASE_URL",
-    "https://dashscope.aliyuncs.com/compatible-mode/v1",
+FIREWORKS_API_KEY = os.getenv("FIREWORKS_API_KEY", "")
+FIREWORKS_BASE_URL = os.getenv(
+    "FIREWORKS_BASE_URL",
+    "https://api.fireworks.ai/inference/v1",
 )
 
-# Model identifiers — override via env to match what's available in your Qwen Cloud console
-QWEN_TEXT_MODEL = os.getenv("QWEN_TEXT_MODEL", "qwen-plus")
-QWEN_OPTIMIZER_MODEL = os.getenv("QWEN_OPTIMIZER_MODEL", "qwen-max")
-QWEN_VISION_MODEL = os.getenv("QWEN_VISION_MODEL", "qwen-vl-plus")
+# Model identifiers — override via env once the AMD hackathon kickoff (Jul 6, 2026)
+# reveals the exact AMD-hosted catalog, or sooner if you want different models. These
+# defaults are real, currently-available Fireworks serverless model slugs as of the
+# last time this file was edited — double check https://fireworks.ai/models before
+# the demo in case a slug has since been retired.
+FIREWORKS_TEXT_MODEL = os.getenv("FIREWORKS_TEXT_MODEL", "accounts/fireworks/models/llama-v3p1-70b-instruct")
+FIREWORKS_OPTIMIZER_MODEL = os.getenv("FIREWORKS_OPTIMIZER_MODEL", "accounts/fireworks/models/deepseek-v3")
+FIREWORKS_VISION_MODEL = os.getenv(
+    "FIREWORKS_VISION_MODEL", "accounts/fireworks/models/llama-v3p2-11b-vision-instruct"
+)
 
 TIMEOUT = 120.0
 
@@ -28,8 +40,8 @@ def _raise_with_body(resp: httpx.Response) -> None:
     """Like resp.raise_for_status(), but includes the response body in the
     exception message. httpx's default HTTPStatusError text is just
     "Client error '403 Forbidden' for url '...'" — it discards the body,
-    which is exactly where DashScope puts the actual reason (bad model id,
-    expired key, no quota, workspace mismatch, etc). Without this, a 403
+    which is exactly where Fireworks puts the actual reason (bad model id,
+    expired key, no quota, account mismatch, etc). Without this, a 403
     is unactionable; with it, the real cause shows up in the logs directly.
     """
     if resp.status_code >= 400:
@@ -43,9 +55,9 @@ def _raise_with_body(resp: httpx.Response) -> None:
 
 def _client() -> httpx.AsyncClient:
     return httpx.AsyncClient(
-        base_url=QWEN_BASE_URL,
+        base_url=FIREWORKS_BASE_URL,
         headers={
-            "Authorization": f"Bearer {QWEN_API_KEY}",
+            "Authorization": f"Bearer {FIREWORKS_API_KEY}",
             "Content-Type": "application/json",
         },
         timeout=TIMEOUT,
@@ -61,10 +73,10 @@ async def text_completion(
     response_format: Optional[dict] = None,
 ) -> str:
     """Send a text prompt and return the completion string."""
-    if not QWEN_API_KEY:
-        raise EnvironmentError("QWEN_API_KEY is not set")
+    if not FIREWORKS_API_KEY:
+        raise EnvironmentError("FIREWORKS_API_KEY is not set")
 
-    model = model or QWEN_TEXT_MODEL
+    model = model or FIREWORKS_TEXT_MODEL
     payload: dict[str, Any] = {
         "model": model,
         "messages": [
@@ -106,7 +118,7 @@ async def json_completion(
     try:
         return json.loads(raw)
     except json.JSONDecodeError as e:
-        raise ValueError(f"Qwen response was not valid JSON: {e}\nRaw: {raw[:500]}")
+        raise ValueError(f"Fireworks response was not valid JSON: {e}\nRaw: {raw[:500]}")
 
 
 async def vision_completion(
@@ -118,10 +130,10 @@ async def vision_completion(
     max_tokens: int = 1024,
 ) -> str:
     """Send a text prompt + chart image and return diagnosis text."""
-    if not QWEN_API_KEY:
-        raise EnvironmentError("QWEN_API_KEY is not set")
+    if not FIREWORKS_API_KEY:
+        raise EnvironmentError("FIREWORKS_API_KEY is not set")
 
-    model = model or QWEN_VISION_MODEL
+    model = model or FIREWORKS_VISION_MODEL
 
     # Encode image as base64
     img_bytes = Path(image_path).read_bytes()
@@ -161,7 +173,7 @@ async def optimizer_completion(prompt: str, system: str, temperature: float = 0.
     return await json_completion(
         prompt=prompt,
         system=system,
-        model=QWEN_OPTIMIZER_MODEL,
+        model=FIREWORKS_OPTIMIZER_MODEL,
         temperature=temperature,
     )
 
@@ -171,16 +183,16 @@ async def config_agent_completion(prompt: str, system: str) -> dict:
     return await json_completion(
         prompt=prompt,
         system=system,
-        model=QWEN_TEXT_MODEL,
+        model=FIREWORKS_TEXT_MODEL,
         temperature=0.15,
     )
 
 
 async def baseline_god_agent_completion(prompt: str, system: str) -> dict:
-    """Single-agent baseline: one Qwen call does propose+diagnose+decide."""
+    """Single-agent baseline: one Fireworks call does propose+diagnose+decide."""
     return await json_completion(
         prompt=prompt,
         system=system,
-        model=QWEN_TEXT_MODEL,
+        model=FIREWORKS_TEXT_MODEL,
         temperature=0.2,
     )
