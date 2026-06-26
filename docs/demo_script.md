@@ -16,7 +16,7 @@
 **What to show:** Brief title card or just start with the dashboard already open.
 
 **What to say (roughly):**
-> "TuneFlow is a society of specialized agents that tune a backend service's configuration using real load-test ground truth. A Config Agent proposes changes, a Judge Agent applies them and runs k6 load tests, and an Optimizer Agent proposes the next move — with the Judge holding veto power. We'll watch it converge in real time and compare it against a single-agent baseline."
+> "Backend performance tuning is still mostly manual — change a config value, rerun a load test, eyeball the result, repeat. TuneFlow automates that loop: it continuously benchmarks a running service under real load, diagnoses what's actually limiting performance, proposes a targeted configuration change, applies it for real, and validates whether it helped. Think GitHub Copilot, but for backend configuration instead of code. We'll watch it converge in real time, and later I'll show you the evidence for why it's built as a small team of specialized agents rather than one model doing everything."
 
 ---
 
@@ -56,13 +56,13 @@
 3. Click **Launch Baseline Run** — note the different `run_id`.
 
 **What to say:**
-> "Now we launch the baseline — a single god-agent that does propose, diagnose, and decide in one Qwen call per iteration. Same load, same iteration budget. This is our apples-to-apples comparison."
+> "Now we launch the baseline — a single god-agent that does propose, diagnose, and decide in one Fireworks AI call per iteration. Same load, same iteration budget. This is our apples-to-apples comparison."
 
 *(If both runs are already finished from the smoke test, skip the live launch and just say "both runs are already finished — let's go straight to the comparison.")*
 
 ---
 
-### 1:50–2:40 — Compare tab: the Track 3 proof chart (50 s)
+### 1:50–2:40 — Compare tab: the receipts (50 s)
 
 **UI actions:**
 1. Click **Compare** tab.
@@ -73,7 +73,7 @@
 4. Scroll down to the two IterationTable panels side by side — show the multi-agent one has richer analysis (Judge diagnosis + vision insight + veto column) vs. the baseline's single "god-agent decision" column.
 
 **What to say:**
-> "This is the key Track 3 result: the multi-agent run, here in blue, converges to a lower p95 latency in fewer iterations than the single-agent baseline in orange. The society of specialized agents — each with a focused role and the ability to veto unsafe changes — finds better configurations faster than one agent doing everything in a single call."
+> "Earlier I said TuneFlow is built as a few specialized agents instead of one model doing everything — here's the evidence for why that's worth the extra complexity, not just architecture for its own sake. The multi-agent run, here in blue, converges to a lower p95 latency in fewer iterations than the single-agent baseline in orange — measured on the exact same workload, not a cherry-picked one. And every one of those agent calls, on both sides of this chart, runs through Fireworks AI, which serves its models on AMD GPUs."
 
 ---
 
@@ -84,7 +84,7 @@
 2. Optional: show the `docs/sample_run_output/` JSON files briefly in a file explorer or terminal.
 
 **What to say:**
-> "The service under test is a FastAPI + PostgreSQL app running on Alibaba Cloud ECS with ApsaraDB — real infrastructure, real load tests, not simulated. The full source code, architecture diagram, and run history are in the repo. Thank you."
+> "The service under test is a real FastAPI + PostgreSQL app, running locally via Docker Compose, hit with real k6 load tests — not simulated metrics. The agent reasoning runs on AMD-hosted Fireworks AI inference. This run found one good config for one fixed workload — the bigger idea is a version of this that keeps re-tuning as the environment and traffic pattern change, the same way a human engineer would if they had the time to keep checking. The full source code, architecture diagram, and run history are in the repo. Thank you."
 
 ---
 
@@ -93,5 +93,5 @@
 - Record at full screen (no cursor jitter on tiny UI elements).
 - Use a browser zoom of 90% so the full dashboard fits without scrolling during critical shots.
 - If a run is still going live, keep the History tab auto-refreshing — the chart updating in real time is more compelling than a static screenshot.
-- The **veto event** (purple VETOED badge in the iteration table) is the single most important visual for Track 3 — if it appeared in your run, zoom in and hold on it for 2–3 seconds.
+- The **veto event** (purple VETOED badge in the iteration table) is the single most important visual for the comparison story — if it appeared in your run, zoom in and hold on it for 2–3 seconds.
 - Keep the voiceover brief — judges will pause and read the charts themselves.

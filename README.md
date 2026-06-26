@@ -1,18 +1,20 @@
-# TuneFlow — Self-Tuning Backend Performance Agent
+# TuneFlow — Autonomous Backend Performance Optimization
 
-**Track 3: Agent Society | Global AI Hackathon Series with Qwen Cloud**
+**Unicorn Track | AMD Developer Hackathon: ACT II**
 
 ---
 
 ## Pitch
 
-TuneFlow is a society of specialized agents that negotiate over backend configuration changes using real load-test ground truth — no simulated metrics, no LLM hallucinating performance numbers. A **Config Agent** proposes configuration changes, a **Judge Agent** applies them, runs real k6 load tests, and diagnoses bottlenecks using both structured metric analysis and Qwen's vision model on rendered performance charts. An **Optimizer Agent** proposes the next targeted change using Qwen's strongest reasoning model, the Judge Agent holds veto power over unsafe proposals (with a code-enforced one-revision round limit so no stuck negotiation can eat the time budget), and a shared termination module stops the loop when target performance is hit, a plateau is detected, or the iteration cap is reached. A single-agent **baseline god-agent** runs the same workload and iteration budget in one Qwen call per iteration, so the dashboard's side-by-side convergence chart provides a direct, measurable efficiency comparison across the exact same ground-truth load tests.
+Backend performance tuning is still largely manual: an engineer changes a connection pool size or a cache TTL, reruns a load test, eyeballs the numbers, and repeats — by hand, with no record of what was tried or why. TuneFlow automates that whole loop. Point it at a service, and it continuously benchmarks the running system under real load, diagnoses what's actually limiting performance, proposes a targeted configuration change, applies it for real, and validates whether the change helped — all against real k6 load tests and real metrics, never simulated numbers. Think of it as **GitHub Copilot for backend performance**: instead of suggesting code, it suggests — and proves — infrastructure configuration changes.
+
+Under the hood, that loop is implemented as three specialized agents (a **Config Agent**, a **Judge Agent**, and an **Optimizer Agent**) coordinating through LangGraph, with the Judge holding veto power over any proposal that violates a safety constraint. That's an implementation detail, not the headline — but it's also not just architecture for its own sake: a single-agent **baseline mode** runs the identical workload through one model call per iteration, so the dashboard's side-by-side comparison gives a measured, real-numbers answer to "does the extra structure actually help," instead of asking you to take it on faith. All of the reasoning behind every diagnosis and every tuning decision executes through the Fireworks AI API, which runs on AMD GPUs.
 
 ---
 
 ## Track
 
-**Track 3: Agent Society** — judged on how agents decompose tasks and assign roles, how they resolve disagreements and execution conflicts, and a measurable efficiency gain over a single-agent baseline.
+**Unicorn Track** (AMD Developer Hackathon: ACT II) — open-ended, judged on Creativity/Originality, Product/Market Potential, Completeness, and Use of AMD Platforms. TuneFlow's "Use of AMD Platforms" story: every piece of agent reasoning — the Judge's bottleneck diagnosis, the Optimizer's tuning choices — runs on Fireworks AI, which serves its models on AMD GPUs.
 
 ---
 
@@ -30,6 +32,14 @@ TuneFlow is a society of specialized agents that negotiate over backend configur
 
 ---
 
+## Vision (roadmap — not built for this submission)
+
+This demo tunes one service under one fixed workload, which raises a fair question: doesn't it just find the same config every time? In a single, unchanging environment, yes — and that's by design for a 25-minute demo run. The actual product idea is broader: the "right" pool size, timeout, and cache TTL are different on a laptop than on an 8-core staging box than on a 32-core production cluster, and different again for a read-heavy workload than a write-heavy one. A real version of TuneFlow continuously re-tunes as the environment or traffic pattern changes, rather than finding one answer once.
+
+Longer-term product direction: a customer connects a repository, TuneFlow deploys a benchmark against a staging copy of their service, runs the optimization loop, and surfaces the recommended change as a pull request with the load-test evidence attached — plus a dashboard and a weekly report tracking performance drift over time. None of that repo/PR integration exists yet; it's the direction this project is headed, not a claim about what's running today.
+
+---
+
 ## Architecture
 
 ![TuneFlow Architecture](docs/architecture.png)
@@ -39,15 +49,16 @@ TuneFlow is a society of specialized agents that negotiate over backend configur
 
 ---
 
-## Key Design Decisions (Track 3 Rubric)
+## Key Design Decisions (Unicorn Track Judging Criteria)
 
-| Rubric criterion | How TuneFlow addresses it |
+| Judging criterion | How TuneFlow addresses it |
 |---|---|
-| **Task decomposition / role assignment** | Three specialized agents (Config, Judge, Optimizer) each own a distinct phase; the LangGraph graph enforces the sequence |
-| **Disagreement resolution** | Judge Agent holds veto power; one revision allowed per iteration, enforced in code (`veto_node`) — logged to persistence |
-| **Measurable efficiency gain** | Dashboard Compare tab shows side-by-side convergence: multi-agent vs. single god-agent over the same load test ground truth |
-| **Vision model integration** | Judge uses `qwen-vl-plus` to analyze rendered Matplotlib charts; visual pattern feeds into the text diagnosis |
-| **Different models per call site** | Config Agent uses `qwen-plus`; Optimizer uses `qwen-max`; Judge vision uses `qwen-vl-plus` |
+| **Product / Market Potential** | Generalizes beyond this demo service to any backend with tunable knobs (pool size, timeouts, cache TTL, batch size) — the optimization loop, safety net, and comparison framework are service-agnostic. See [Vision](#vision-roadmap--not-built-for-this-submission) for where this goes as a product |
+| **Creativity / Originality** | Treats backend tuning as a continuous, automated loop validated against real load tests — not a chatbot wrapper, and not a one-shot "AI suggests a config" tool with no way to check if the suggestion actually helped |
+| **Completeness** | Full working stack: real FastAPI service, real k6 load tests, dual-Postgres persistence, a React dashboard with live polling — runnable end-to-end via `docker-compose up`. As supporting evidence, not the headline: a single-agent baseline mode runs the identical workload, and the dashboard's head-to-head comparison chart gives a measured answer for whether the extra structure (specialized roles + a veto safety check) actually outperforms one model doing everything in a single call |
+| **Use of AMD Platforms** | Every piece of agent reasoning — diagnosis, tuning decisions, the baseline mode's single-shot reasoning — runs through the Fireworks AI API (`agents/fireworks_client.py`), which serves its models on AMD GPUs |
+
+Lower-level technical details that back up Completeness, for anyone who wants to look under the hood: the loop is implemented as a Config Agent, Judge Agent, and Optimizer Agent coordinating through LangGraph; the Judge holds veto power with a code-enforced one-revision round limit (`veto_node`); the Judge's diagnosis combines structured metric analysis with a Fireworks vision model reading rendered performance charts; and the Config/Optimizer/baseline/vision call sites each use a different Fireworks model role (`FIREWORKS_TEXT_MODEL`, `FIREWORKS_OPTIMIZER_MODEL`, `FIREWORKS_VISION_MODEL`) matched to how hard that call site's decision actually is.
 
 ---
 
@@ -58,8 +69,8 @@ TuneFlow is a society of specialized agents that negotiate over backend configur
 - Docker + Docker Compose
 - k6 installed (or use the orchestrator container which installs it)
 - Node.js 20+ (for dashboard dev server)
-- A Qwen Cloud API key (from the Qwen Cloud console)
-- An Alibaba Cloud account (for deployment; optional for local dev)
+- A Fireworks AI API key (from the [Fireworks AI console](https://fireworks.ai))
+- An Alibaba Cloud account is **not** required — `infra/alibaba/` is a legacy deployment path from an earlier hackathon target and is optional/unused for this submission
 
 ### Environment variables
 
@@ -67,18 +78,12 @@ Copy `.env.example` to `.env` and fill in your keys:
 
 ```bash
 cp .env.example .env
-# Edit .env — at minimum set QWEN_API_KEY
+# Edit .env — at minimum set FIREWORKS_API_KEY
 ```
 
 **Required for any run:**
 ```
-QWEN_API_KEY=sk-...
-```
-
-**Required for Alibaba Cloud deployment:**
-```
-ALIBABA_ACCESS_KEY_ID=...
-ALIBABA_ACCESS_KEY_SECRET=...
+FIREWORKS_API_KEY=fw_...
 ```
 
 ### Local dev (Docker Compose)
@@ -145,7 +150,7 @@ LIVE_TEST_URL=http://localhost:8000 pytest tests/test_hotswap.py -v
   runner.py       Python wrapper → structured metrics
 
 /agents
-  qwen_client.py  Centralized Qwen Cloud client (text + vision)
+  fireworks_client.py  Centralized Fireworks AI client (text + vision)
   config_agent.py Config Agent (initial + targeted proposals)
   judge_agent.py  Judge Agent (apply, test, diagnose, veto)
   optimizer_agent.py  Optimizer Agent (propose, revise)
@@ -202,26 +207,21 @@ README.md
 
 ---
 
-## Alibaba Cloud Deployment
+## Legacy: Alibaba Cloud Deployment
 
-See [`infra/alibaba/deploy.sh`](infra/alibaba/deploy.sh) for the full deployment script (ECS + ApsaraDB for PostgreSQL).
-
-**Proof of deployment:** [`infra/alibaba/verify_deployment.py`](infra/alibaba/verify_deployment.py) makes real Alibaba Cloud SDK calls to describe the deployed ECS and RDS instances.
-
-```bash
-pip install -r infra/alibaba/requirements.txt
-python infra/alibaba/verify_deployment.py
-```
+TuneFlow was originally built for a different hackathon track that required a Qwen Cloud + Alibaba Cloud stack. That deployment path is **not used** for the AMD Developer Hackathon: ACT II submission, but the script is kept in the repo for reference: [`infra/alibaba/deploy.sh`](infra/alibaba/deploy.sh) (ECS + ApsaraDB for PostgreSQL) and [`infra/alibaba/verify_deployment.py`](infra/alibaba/verify_deployment.py) (proof-of-deployment via the Alibaba SDK). Running either spends real money/credits and is entirely optional.
 
 ---
 
-## Demo Video
+## AMD Developer Hackathon: ACT II Submission
 
-See [`docs/demo_script.md`](docs/demo_script.md) for the shot-by-shot recording guide.
+See [`docs/demo_script.md`](docs/demo_script.md) for the shot-by-shot recording guide. Submission goes through lablab.ai and needs: project title, short/long description, technology tags, cover image, video presentation, slide presentation, this public GitHub repo, and a demo application URL.
 
-**Upload link:** `[Demo Video — to be added after recording]`
+**Video presentation:** `[Demo Video — to be added after recording]`
 
-**Alibaba Cloud deployment proof recording:** `[Deployment Recording — to be added]`
+**Slide presentation:** `[Slides — to be added]`
+
+**Demo application URL:** `[to be added — local docker-compose unless a hosted demo is set up]`
 
 ---
 

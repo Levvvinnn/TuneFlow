@@ -19,18 +19,18 @@ Orchestrator API  (FastAPI, :8080)
     ▼
 LangGraph Graph  (multi-agent)
     │
-    ├── Config Agent  ──────────────────────────── qwen-plus
+    ├── Config Agent  ──────────────────────────── Fireworks AI (FIREWORKS_TEXT_MODEL)
     │     iteration 1: propose initial config
     │     later: targeted change from Judge analysis
     │
-    ├── Judge Agent  ───────────────────────────── qwen-plus (text)
-    │     apply config via /admin/reconfigure         + qwen-vl-plus (vision)
+    ├── Judge Agent  ───────────────────────────── Fireworks AI (FIREWORKS_TEXT_MODEL, text)
+    │     apply config via /admin/reconfigure         + (FIREWORKS_VISION_MODEL, vision)
     │     run k6 load test (2–3 repeats)
     │     text diagnosis (bottleneck, severity, trend)
     │     vision diagnosis (chart image → visual pattern)
     │     veto unsafe Optimizer proposals
     │
-    ├── Optimizer Agent  ───────────────────────── qwen-max
+    ├── Optimizer Agent  ───────────────────────── Fireworks AI (FIREWORKS_OPTIMIZER_MODEL)
     │     propose next config change
     │     one revision on veto (round limit = 1, enforced in code)
     │
@@ -47,7 +47,7 @@ LangGraph Graph  (multi-agent)
           max_iterations → stop
 
 Baseline God-Agent  (separate loop, same infra)
-    │  single qwen-plus call per iteration: diagnose+propose+decide
+    │  single Fireworks AI call per iteration: diagnose+propose+decide
     └── same termination logic as multi-agent (fair comparison)
 ```
 
@@ -69,7 +69,9 @@ FastAPI Service Under Test  (:8000)
 Service PostgreSQL  (:5432)
     │  Tables: users (2k), products (5k), orders (10k), order_items
     │  Extensions: pg_trgm (fuzzy search)
-    └── ApsaraDB for PostgreSQL on Alibaba Cloud (production)
+    └── runs as a Docker Compose service for local dev/demo
+        (infra/alibaba/ has a legacy, unused Alibaba Cloud ApsaraDB
+         deployment path from an earlier hackathon target)
 
 Persistence PostgreSQL  (:5433)
     │  Tables: runs, iterations
@@ -94,10 +96,10 @@ k6 Load Test
    a. POST /admin/reconfigure → pool drains, new engine created
    b. k6 run × 2 repeats → averaged metrics (p95, p99, rps, err_rate)
    c. GET /admin/db-stats → connection count
-   d. Text call (qwen-plus): structured bottleneck diagnosis
-   e. Render Matplotlib chart → vision call (qwen-vl-plus): visual pattern
+   d. Text call (Fireworks AI, FIREWORKS_TEXT_MODEL): structured bottleneck diagnosis
+   e. Render Matplotlib chart → vision call (Fireworks AI, FIREWORKS_VISION_MODEL): visual pattern
    f. Combine text + vision into unified diagnosis
-3. Optimizer Agent (qwen-max): propose next config change
+3. Optimizer Agent (Fireworks AI, FIREWORKS_OPTIMIZER_MODEL): propose next config change
 4. Veto Node: check safety constraints
    → if violated: Optimizer revises (1 retry max, then forced fallback)
    → if safe: accept as final_decision
@@ -110,9 +112,9 @@ k6 Load Test
 ## Comparison with Baseline
 
 The baseline god-agent follows the same data flow but compresses steps 2–3 into
-a single Qwen call that does diagnose + propose in one shot, using qwen-plus with
-no inter-agent negotiation. This gives the dashboard's Compare tab a fair head-to-head
-convergence comparison.
+a single Fireworks AI call that does diagnose + propose in one shot, using
+FIREWORKS_TEXT_MODEL with no inter-agent negotiation. This gives the dashboard's
+Compare tab a fair head-to-head convergence comparison.
 
 ## Architecture Diagram
 

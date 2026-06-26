@@ -13,16 +13,35 @@ behavior you see in a real run back to the line of code that produced it.
 
 A backend service has a handful of tunable knobs — connection pool size, query
 timeout, cache TTL, batch size, retry interval — and the "right" values depend on
-the actual workload, not on intuition. TuneFlow automates the tuning loop: propose a
-config, apply it for real (no simulation), hammer it with a real load test, diagnose
-what's actually limiting performance, propose the next change, and repeat until
-performance hits a target or stops improving. The hackathon angle (Track 3, Agent
-Society) is *how* the proposing and diagnosing is done: not one model doing
-everything, but three specialized agents — Config, Judge, Optimizer — that each own
-one phase and hand off to the next, with the Judge holding veto power over changes
-that look unsafe. A single-agent "baseline god-agent" mode runs the identical
-workload so the difference between *a society of specialized agents* and *one model
-doing it all* is a measurable, real number, not a claim.
+the actual workload and environment, not on intuition. Tuning them today is manual:
+an engineer changes one, reruns a load test, eyeballs the result, repeats. TuneFlow
+automates that loop end to end: propose a config, apply it for real (no simulation),
+hammer it with a real load test, diagnose what's actually limiting performance,
+propose the next change, and repeat until performance hits a target or stops
+improving — continuously, not as a one-shot suggestion with no way to check whether
+it actually helped.
+
+*Under the hood* (this is implementation, not the headline): the loop is built as
+three specialized agents — Config, Judge, Optimizer — that each own one phase and
+hand off to the next, with the Judge holding veto power over changes that look
+unsafe, coordinated through LangGraph. A single-agent "baseline god-agent" mode runs
+the identical workload so that the difference between *this structure* and *one
+model doing it all* is a measurable, real number sitting in the dashboard's Compare
+tab, not a claim — useful supporting evidence for Completeness, not the project's
+pitch. Every agent's reasoning runs through Fireworks AI, whose inference executes
+on AMD GPUs — the project's concrete answer to the Unicorn Track's "Use of AMD
+Platforms" criterion.
+
+> **A note on this project's history.** TuneFlow was originally built for a
+> different hackathon track that targeted Qwen Cloud (DashScope) for LLM calls and
+> Alibaba Cloud for deployment. When the Alibaba Cloud account signup turned out to
+> be blocked, the project was retargeted to the AMD Developer Hackathon: ACT II
+> (Unicorn Track), and the LLM backend was swapped from Qwen Cloud to Fireworks AI —
+> whose serverless models run on AMD GPU hardware. The multi-agent architecture,
+> the veto mechanic, the real load-test ground truth, and the baseline comparison
+> are all unchanged; only the model provider and the hackathon framing moved. The
+> Alibaba deployment scripts under `infra/alibaba/` are kept in the repo but are not
+> part of this submission.
 
 ---
 
@@ -86,8 +105,9 @@ That single fact is the source of the most serious bug this project had (section
 below), so hold onto it.
 
 **Node 1 — `config_node`.** Iteration 1: calls `config_agent.py`'s
-`propose_initial_config()`, which asks Qwen (`qwen-plus`) for a sensible starting
-point within `PARAM_BOUNDS` (e.g. `pool_size: 2-50`, `query_timeout_ms: 500-15000`).
+`propose_initial_config()`, which asks Fireworks AI's text model
+(`FIREWORKS_TEXT_MODEL`) for a sensible starting point within `PARAM_BOUNDS` (e.g.
+`pool_size: 2-50`, `query_timeout_ms: 500-15000`).
 Iteration 2+: does **not** call any agent — it just reads `state["proposed_config"]`,
 which was placed there by `terminate_node` at the end of the *previous* iteration.
 (Why this matters is section 7.)
@@ -101,21 +121,23 @@ which was placed there by `terminate_node` at the end of the *previous* iteratio
    CRUD workload: 40% product search, 25% user lookup, 20% order create, 15% order
    read — see the script for the exact `Math.random()` routing), parses the
    `--summary-export` JSON, and averages 2 repeats together to smooth out noise.
-3. `diagnose_text()` — sends the metrics + recent history to Qwen (`qwen-plus`) and
-   asks for a structured JSON diagnosis: `bottleneck`, `severity`, `reasoning`,
-   `recommended_direction`, `trend`.
+3. `diagnose_text()` — sends the metrics + recent history to Fireworks AI's text
+   model (`FIREWORKS_TEXT_MODEL`) and asks for a structured JSON diagnosis:
+   `bottleneck`, `severity`, `reasoning`, `recommended_direction`, `trend`.
 4. `diagnose_vision()` — `chart.py` renders a 3-panel Matplotlib PNG (latency,
    throughput, error rate across all iterations so far), and that image is sent to
-   Qwen's vision model (`qwen-vl-plus`) with a prompt asking it to read the *shape* of
-   each panel. This is a second, independent signal on top of the text diagnosis —
-   the same underlying numbers, looked at as a picture instead of a table.
+   Fireworks AI's vision model (`FIREWORKS_VISION_MODEL`) with a prompt asking it to
+   read the *shape* of each panel. This is a second, independent signal on top of
+   the text diagnosis — the same underlying numbers, looked at as a picture instead
+   of a table.
 
 **Node 3 — `optimizer_node`.** `optimizer_agent.py`'s `propose_next_config()` takes
 the Judge's full output (text diagnosis + vision diagnosis + raw metrics) and asks
-Qwen's strongest model (`qwen-max`) to pick the single most impactful change. This is
-a deliberately different, stronger model than the Config Agent uses — the Optimizer's
-job (weighing tradeoffs under uncertainty) is harder than the Config Agent's job
-(picking a reasonable starting point), so it gets the better model.
+Fireworks AI's stronger reasoning model (`FIREWORKS_OPTIMIZER_MODEL`) to pick the
+single most impactful change. This is a deliberately different, stronger model than
+the Config Agent uses — the Optimizer's job (weighing tradeoffs under uncertainty) is
+harder than the Config Agent's job (picking a reasonable starting point), so it gets
+the better model.
 
 **Node 4 — `veto_node`.** Checks the Optimizer's proposal against
 `judge_agent.py`'s `SAFETY_CONSTRAINTS` (hard floors like `pool_size >= 2`,
@@ -125,8 +147,9 @@ not, the Optimizer gets exactly **one** revision attempt
 of 1 is enforced by `veto_node`'s own code, not by hoping the model stops on its own.
 If the revision is *also* unsafe, the node forces a fallback to the current
 (already-known-safe) config rather than letting an unsafe value through by
-exhaustion. This veto/one-revision mechanic is the literal Track 3 rubric item
-"disagreement resolution between agents."
+exhaustion. This veto/one-revision mechanic is the concrete demonstration of
+disagreement resolution between agents that backs up the project's Creativity and
+Completeness story for the Unicorn Track.
 
 **Node 5 — `persist_node`.** Writes one `Iteration` row to the persistence DB via
 `store.py`'s `save_iteration()` — every artifact from this iteration (config proposed,
@@ -148,9 +171,10 @@ veto-checked decision forward into the next iteration's `config_node` read.
 `agents/baseline.py`'s `run_baseline()` is a plain Python `for` loop, not a graph —
 there's no LangGraph state machine because there's only one decision-maker per
 iteration. Each iteration: apply the current config, run the same load test, make
-**one** Qwen call (`god_agent_step()`, using `qwen-plus`) that diagnoses *and*
-proposes *and* explains in a single JSON response, persist, check termination, and
-set `current_config = result["next_config"]` directly for the next loop pass.
+**one** Fireworks AI call (`god_agent_step()`, using `FIREWORKS_TEXT_MODEL`) that
+diagnoses *and* proposes *and* explains in a single JSON response, persist, check
+termination, and set `current_config = result["next_config"]` directly for the next
+loop pass.
 
 There's no Optimizer, no veto, no two-agent handoff — which also means there's no
 "discard the wrong thing" failure mode of the kind multi-agent had (section 7),
@@ -162,33 +186,34 @@ is the demo's punchline: see section 8.
 
 ---
 
-## 5. Qwen Cloud integration
+## 5. Fireworks AI integration
 
-Every Qwen call goes through one file, `agents/qwen_client.py` — nothing else in the
-codebase constructs an HTTP request to Qwen directly. Three model roles, each
-overridable via env var:
+Every LLM call goes through one file, `agents/fireworks_client.py` — nothing else in
+the codebase constructs an HTTP request to an LLM provider directly. Three model
+roles, each overridable via env var:
 
 | Role | Env var | Default | Used by |
 |---|---|---|---|
-| Text / reasoning | `QWEN_TEXT_MODEL` | `qwen-plus` | Config Agent, Judge's text diagnosis, baseline god-agent |
-| Stronger reasoning | `QWEN_OPTIMIZER_MODEL` | `qwen-max` | Optimizer Agent only |
-| Vision | `QWEN_VISION_MODEL` | `qwen-vl-plus` | Judge's chart analysis only |
+| Text / reasoning | `FIREWORKS_TEXT_MODEL` | `accounts/fireworks/models/llama-v3p1-70b-instruct` | Config Agent, Judge's text diagnosis, baseline god-agent |
+| Stronger reasoning | `FIREWORKS_OPTIMIZER_MODEL` | `accounts/fireworks/models/deepseek-v3` | Optimizer Agent only |
+| Vision | `FIREWORKS_VISION_MODEL` | `accounts/fireworks/models/llama-v3p2-11b-vision-instruct` | Judge's chart analysis only |
 
 `json_completion()` is the workhorse: it calls `text_completion()`, strips markdown
 code fences if the model wrapped its JSON in them, and raises a clear `ValueError`
 with the raw text included if parsing still fails — so a malformed model response
 shows up as a readable error instead of a silent `{}`. `_raise_with_body()` exists
 because `httpx`'s default error message for a 4xx/5xx response discards the response
-body, and DashScope (Qwen's API) puts the actually-useful information — wrong model
-ID, expired key, no quota, workspace/region mismatch — in that body. Without this
-wrapper, a 403 just says "403 Forbidden"; with it, the log line tells you exactly
-why.
+body, and Fireworks AI's API puts the actually-useful information — wrong model ID,
+expired key, no quota — in that body. Without this wrapper, a 403 just says "403
+Forbidden"; with it, the log line tells you exactly why.
 
-One operational gotcha worth remembering: Qwen Cloud's free quota is
-region-specific. `QWEN_BASE_URL` must point at the Singapore
-(`dashscope-intl` / international) endpoint to use the free tier this project relies
-on — this was fixed early in the project (task #1) and is now baked into
-`.env.example`'s default.
+**Historical note (from the Qwen Cloud days):** the project's original provider,
+Qwen Cloud (via DashScope), had a real operational gotcha where the free quota was
+region-specific — the base URL had to point at the Singapore (`dashscope-intl`)
+endpoint to use the free tier (task #1, fixed early in the project). Fireworks AI
+has no equivalent region-quota split, so this particular gotcha doesn't carry over
+to the current provider — noted here only because the bug was real and the fix
+pattern (read the error body, don't trust the status code alone) is still relevant.
 
 ---
 
@@ -315,11 +340,14 @@ earning its complexity: the Judge's diagnosis is a second read on the metrics
 that isn't reducible to the one number the loop terminates on, and it caught a
 regression that scoring alone would have missed.
 
-This is real output from this project's own runs, not a hypothetical — it's solid
-evidence for the Track 3 "measurable efficiency gain over a single-agent baseline"
-rubric line. Worth keeping the actual run JSON on hand for the demo; for a cleaner
-A/B, consider using `/compare?run_a=...&run_b=...` to pull both runs' p95/p99
-series side by side from the same comparison endpoint the dashboard uses.
+This is real output from this project's own runs, not a hypothetical. It isn't the
+project's headline — the headline is "TuneFlow continuously optimizes backend
+configuration"; this is the receipts underneath that claim, the answer to "does the
+extra structure (Judge + Optimizer + veto) actually outperform one model doing
+everything in a single call." Worth keeping the actual run JSON on hand for the
+demo as supporting evidence; for a cleaner A/B, consider using
+`/compare?run_a=...&run_b=...` to pull both runs' p95/p99 series side by side from
+the same comparison endpoint the dashboard uses.
 
 ---
 
@@ -370,7 +398,7 @@ curl http://localhost:8080/runs/<run_id>/status
 # Full per-iteration data once it's done (or mid-run)
 curl http://localhost:8080/runs/<run_id>/history | python3 -m json.tool
 
-# Run the unit test suite (mocks Qwen, no live infra needed for most of it)
+# Run the unit test suite (mocks the LLM client, no live infra needed for most of it)
 pip install -r tests/requirements.txt
 pytest tests/ -v
 ```
@@ -398,7 +426,7 @@ loadtest/
   runner.py             shells out to k6, parses summary JSON → LoadTestMetrics
 
 agents/
-  qwen_client.py        the only file that talks to Qwen's API
+  fireworks_client.py    the only file that talks to Fireworks AI's API
   config_agent.py        iteration-1 starting config only (see bug 4)
   judge_agent.py          apply + measure + diagnose (text & vision) + veto check
   optimizer_agent.py      propose next change + handle one revision
@@ -427,14 +455,33 @@ intentionally **not** done on your behalf, because each one needs a decision onl
 you can make:
 
 - **Flipping the GitHub repo public.** It's already pushed privately with a LICENSE
-  in place. Going public is a one-click decision, but it's yours to make.
-- **Alibaba Cloud deployment.** `infra/alibaba/deploy.sh` and
-  `verify_deployment.py` are ready, but this spends real money the moment it runs —
-  say the word and it's a short step.
-- **Recording the demo video.** The shot list is already written in
-  `docs/demo_script.md`. Section 8 above gives you a concrete, real-numbers
-  talking point to use in it (baseline's p99 regression vs. multi-agent catching
-  it) that didn't exist before this session.
+  in place. Going public is a one-click decision, but it's yours to make — and the
+  AMD Developer Hackathon: ACT II submission requires a public repo.
+- **Alibaba Cloud deployment.** No longer the active deployment plan — the AMD
+  hackathon submission runs locally via `docker-compose up`. `infra/alibaba/deploy.sh`
+  and `verify_deployment.py` still work if you ever want to revisit that path, but
+  running them spends real money/credits and isn't needed for this submission.
+- **Recording the demo video and slides.** The shot list is already written in
+  `docs/demo_script.md` (updated for the Fireworks AI / AMD framing). Section 8
+  above gives you a concrete, real-numbers talking point to use in it (baseline's
+  p99 regression vs. multi-agent catching it). The AMD ACT II submission on
+  lablab.ai also needs a slide presentation, a cover image, and a demo application
+  URL — none of those exist yet.
+- **Setting a real `FIREWORKS_API_KEY` and double-checking model slugs.** The
+  defaults in `.env.example` were real, live Fireworks model slugs as of when this
+  pivot was made — worth a quick check against https://fireworks.ai/models before
+  the demo, and again once AMD ACT II's kickoff (Jul 6, 2026) reveals the
+  AMD-hosted model catalog, in case anything's changed.
 
 Everything else — the actual tuning loop, both modes, the bug fixes, the cleanup —
 is done and verified against real runs, not just unit tests.
+
+**A note on positioning, not code.** This demo tunes one service under one fixed
+workload, so a fair challenge is "doesn't it just find the same config every time?"
+In a single unchanging environment, yes — that's intentional for a short demo run.
+The README's [Vision](../README.md#vision-roadmap--not-built-for-this-submission)
+section lays out the actual product idea: the right config differs by environment
+(laptop vs. staging vs. production) and by workload shape (read-heavy vs.
+write-heavy), so a real deployment of this re-tunes continuously rather than
+solving once. None of the repo-connect/PR-automation part of that vision is built —
+it's pitch material for the submission, not a claim about current capability.

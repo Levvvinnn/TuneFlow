@@ -9,19 +9,19 @@ flowchart TD
     end
 
     subgraph AGENTS["🤖 LangGraph Agent Graph"]
-        CFG["Config Agent\nqwen-plus\n─────────────\nIteration 1: initial config\nLater: targeted change"]
-        JUDGE["Judge Agent\nqwen-plus · qwen-vl-plus\n─────────────\nApply config\nRun k6 load test\nText diagnosis\nVision diagnosis\nHolds veto power"]
-        OPT["Optimizer Agent\nqwen-max\n─────────────\nPropose next change\nRevise on veto\n(1 retry max)"]
+        CFG["Config Agent\nFireworks: TEXT_MODEL\n─────────────\nIteration 1: initial config\nLater: targeted change"]
+        JUDGE["Judge Agent\nFireworks: TEXT_MODEL · VISION_MODEL\n─────────────\nApply config\nRun k6 load test\nText diagnosis\nVision diagnosis\nHolds veto power"]
+        OPT["Optimizer Agent\nFireworks: OPTIMIZER_MODEL\n─────────────\nPropose next change\nRevise on veto\n(1 retry max)"]
         VETO["Veto Node\n─────────────\nCheck safety constraints\nAllow 1 revision\nForced fallback"]
         PERSIST["Persist Node\n─────────────\nWrite iteration to\nPersistence DB"]
         TERM["Terminate Node\n─────────────\ntarget_hit\nplateau-N\nmax_iterations"]
-        BASELINE["Baseline God-Agent\nqwen-plus\n─────────────\nSingle call/iter:\ndiagnose + propose"]
+        BASELINE["Baseline God-Agent\nFireworks: TEXT_MODEL\n─────────────\nSingle call/iter:\ndiagnose + propose"]
     end
 
-    subgraph QWEN["☁️ Qwen Cloud API"]
-        QT["qwen-plus\nText / reasoning"]
-        QM["qwen-max\nOptimizer decisions"]
-        QV["qwen-vl-plus\nChart vision analysis"]
+    subgraph FIREWORKS["⚡ Fireworks AI API (runs on AMD GPUs)"]
+        QT["FIREWORKS_TEXT_MODEL\nText / reasoning"]
+        QM["FIREWORKS_OPTIMIZER_MODEL\nOptimizer decisions"]
+        QV["FIREWORKS_VISION_MODEL\nChart vision analysis"]
     end
 
     subgraph SVC["🐳 Service Under Test :8000"]
@@ -32,11 +32,6 @@ flowchart TD
     subgraph DBS["🗄️ Databases"]
         SVCDB["Service DB\nPostgres :5432\n─────────────\nusers 2k\nproducts 5k\norders 10k\norder_items"]
         PERSISTDB["Persistence DB\nPostgres :5433\n─────────────\nruns\niterations\nconfig · metrics\njudge_analysis\nveto_events"]
-    end
-
-    subgraph ALI["☁️ Alibaba Cloud"]
-        ECS["ECS Instance\necs.c6.xlarge\nDocker host"]
-        RDS["ApsaraDB RDS\nPostgreSQL 15\nManaged DB"]
     end
 
     %% UI ↔ Orchestrator
@@ -55,7 +50,7 @@ flowchart TD
     PERSIST --> TERM
     TERM -->|"not done"| CFG
 
-    %% Agents ↔ Qwen Cloud
+    %% Agents ↔ Fireworks AI
     CFG <-->|"propose config"| QT
     JUDGE <-->|"text diagnosis"| QT
     JUDGE <-->|"chart image"| QV
@@ -74,20 +69,13 @@ flowchart TD
     PERSIST -->|"save iteration\nconfig·metrics·veto"| PERSISTDB
     ORCH <-->|"read history"| PERSISTDB
 
-    %% Alibaba Cloud
-    ECS -.->|"hosts"| SVC_APP
-    ECS -.->|"hosts"| ORCH
-    RDS -.->|"managed"| SVCDB
-
     %% Styles
     classDef agentNode fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
     classDef infraNode fill:#1a1a2e,stroke:#6366f1,color:#e2e8f0
-    classDef qwenNode fill:#0c2340,stroke:#06b6d4,color:#e2e8f0
+    classDef fireworksNode fill:#2d1300,stroke:#f97316,color:#e2e8f0
     classDef dbNode fill:#1c2814,stroke:#22c55e,color:#e2e8f0
-    classDef aliNode fill:#2d1b00,stroke:#f97316,color:#e2e8f0
 
     class CFG,JUDGE,OPT,VETO,PERSIST,TERM,BASELINE agentNode
     class SVC_APP,K6,DASH,ORCH infraNode
-    class QT,QM,QV qwenNode
+    class QT,QM,QV fireworksNode
     class SVCDB,PERSISTDB dbNode
-    class ECS,RDS aliNode
