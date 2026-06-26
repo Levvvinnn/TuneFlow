@@ -1,0 +1,63 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f1117"/>
+      <stop offset="100%" stop-color="#1a1a2e"/>
+    </linearGradient>
+    <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#22c55e"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- subtle grid -->
+  <g stroke="#23263a" stroke-width="1">
+    <line x1="0" y1="150" x2="1200" y2="150"/>
+    <line x1="0" y1="300" x2="1200" y2="300"/>
+    <line x1="0" y1="450" x2="1200" y2="450"/>
+  </g>
+
+  <!-- three agent nodes top-right, connected in a loop -->
+  <g transform="translate(760,70)">
+    <circle cx="0" cy="0" r="26" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5"/>
+    <text x="0" y="6" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#e2e8f0">Cfg</text>
+
+    <circle cx="120" cy="40" r="26" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5"/>
+    <text x="120" y="46" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#e2e8f0">Judge</text>
+
+    <circle cx="60" cy="120" r="26" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5"/>
+    <text x="60" y="126" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#e2e8f0">Opt</text>
+
+    <path d="M 24 10 L 96 36" stroke="#3b82f6" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+    <path d="M 112 64 L 76 100" stroke="#3b82f6" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+    <path d="M 38 102 L 0 26" stroke="#3b82f6" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  </g>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#3b82f6"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="80" y="280" font-family="Helvetica, Arial, sans-serif" font-size="76" font-weight="700" fill="#f8fafc">TuneFlow</text>
+  <text x="80" y="335" font-family="Helvetica, Arial, sans-serif" font-size="30" fill="#94a3b8">Autonomous Backend Performance Optimization</text>
+
+  <!-- Convergence line chart motif -->
+  <g transform="translate(80,420)">
+    <polyline points="0,80 90,55 180,68 270,30 360,38 450,10 540,16"
+              fill="none" stroke="url(#lineGrad)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="540" cy="16" r="6" fill="#22c55e"/>
+    <text x="560" y="20" font-family="Helvetica, Arial, sans-serif" font-size="16" fill="#22c55e">p95 ↓</text>
+  </g>
+
+  <!-- Footer tags -->
+  <g font-family="Helvetica, Arial, sans-serif" font-size="20" fill="#cbd5e1">
+    <text x="80" y="565">AMD Developer Hackathon: ACT II — Unicorn Track</text>
+  </g>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="18" fill="#f97316">
+    <text x="80" y="595">Agent reasoning on Fireworks AI · served on AMD GPUs</text>
+  </g>
+</svg>
