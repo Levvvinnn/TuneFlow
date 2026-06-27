@@ -8,11 +8,10 @@ from sqlalchemy import select
 from database import get_session
 from models import Iteration, Run
 
-
 async def create_run(
     mode: str,
     target_p95_ms: Optional[float] = None,
-    max_iterations: int = 15,
+    max_iterations: int = 10,
     plateau_n: int = 3,
     vus: int = 100,
     load_duration_seconds: int = 30,
