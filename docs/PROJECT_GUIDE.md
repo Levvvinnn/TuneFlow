@@ -454,16 +454,12 @@ Local end-to-end is solid for both modes as of this writing — every bug in sec
 intentionally **not** done on your behalf, because each one needs a decision only
 you can make:
 
-- **Pushing the Fireworks/AMD pivot to GitHub.** The repo's visibility is already
-  flipped to public, which satisfies the AMD Developer Hackathon: ACT II
-  requirement. But all of the work in this pivot — the Qwen→Fireworks rename, the
-  AMD framing, the product-first repositioning pass on this guide, the README, and
-  the demo script — exists only as local commits on this machine; it has not been
-  pushed yet, because pushing needs your own GitHub credentials, which this sandbox
-  doesn't have. Until you run `git push origin main` from a machine that's
-  authenticated as you, the public repo is still showing the old pre-pivot README
-  (Qwen Cloud, Track 3, "society of agents"). This is the single most important
-  item on the checklist — everything else assumes the push has happened.
+- **Pushing to GitHub.** Done — the Fireworks/AMD pivot (the Qwen→Fireworks
+  rename, the AMD framing, the product-first repositioning pass on this guide,
+  the README, and the demo script) plus the submission assets added afterward
+  (cover image, slide deck, draft text, this checklist) are all confirmed present
+  on `github.com/Levvvinnn/TuneFlow`'s `main` branch. This sandbox still has no
+  GitHub push credentials of its own — the push happened from your machine.
 - **Alibaba Cloud deployment.** No longer the active deployment plan — the AMD
   hackathon submission runs locally via `docker-compose up`. `infra/alibaba/deploy.sh`
   and `verify_deployment.py` still work if you ever want to revisit that path, but

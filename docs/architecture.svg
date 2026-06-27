@@ -1,0 +1,148 @@
+<svg viewBox="0 0 1500 1100" xmlns="http://www.w3.org/2000/svg">
+<rect x="0" y="0" width="1500" height="1100" fill="#0f1117"/>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#9aa3b2"/>
+  </marker>
+</defs>
+<rect x="600" y="20" width="300" height="120" rx="10" ry="10" fill="none" stroke="#374151" stroke-width="1.5" stroke-dasharray="6,4"/>
+<text x="616" y="44" font-size="15" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#9ca3af">User Interface</text>
+<rect x="600" y="180" width="300" height="120" rx="10" ry="10" fill="none" stroke="#374151" stroke-width="1.5" stroke-dasharray="6,4"/>
+<text x="616" y="204" font-size="15" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#9ca3af">Orchestrator API  ·  :8080</text>
+<rect x="40" y="340" width="1420" height="320" rx="10" ry="10" fill="none" stroke="#374151" stroke-width="1.5" stroke-dasharray="6,4"/>
+<text x="56" y="364" font-size="15" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#9ca3af">LangGraph Agent Graph</text>
+<rect x="40" y="720" width="1420" height="150" rx="10" ry="10" fill="none" stroke="#374151" stroke-width="1.5" stroke-dasharray="6,4"/>
+<text x="56" y="744" font-size="15" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#9ca3af">Fireworks AI API  (runs on AMD GPUs)</text>
+<rect x="40" y="910" width="700" height="170" rx="10" ry="10" fill="none" stroke="#374151" stroke-width="1.5" stroke-dasharray="6,4"/>
+<text x="56" y="934" font-size="15" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#9ca3af">Service Under Test  ·  :8000</text>
+<rect x="800" y="910" width="660" height="170" rx="10" ry="10" fill="none" stroke="#374151" stroke-width="1.5" stroke-dasharray="6,4"/>
+<text x="816" y="934" font-size="15" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#9ca3af">Databases</text>
+<rect x="620" y="55" width="260" height="70" rx="10" ry="10" fill="#1a1a2e" stroke="#6366f1" stroke-width="1.8"/>
+<text x="750.0" y="74.0" font-size="14.5" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Dashboard</text>
+<text x="750.0" y="93.0" font-size="12.5" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">React + recharts · :3000</text>
+<text x="750.0" y="112.0" font-size="12.5" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Run · History · Compare tabs</text>
+<rect x="620" y="215" width="260" height="70" rx="10" ry="10" fill="#1a1a2e" stroke="#6366f1" stroke-width="1.8"/>
+<text x="750.0" y="234.35000000000002" font-size="14.5" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Orchestrator</text>
+<text x="750.0" y="252.65000000000003" font-size="11.8" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">POST /runs · GET /runs/{id}/status</text>
+<text x="750.0" y="270.95000000000005" font-size="11.8" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">GET /runs/{id}/history · /compare</text>
+<rect x="70" y="380" width="190" height="110" rx="10" ry="10" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.8"/>
+<text x="165.0" y="410.8" font-size="13" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Config Agent</text>
+<text x="165.0" y="428.5" font-size="11.2" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Fireworks: TEXT_MODEL</text>
+<text x="165.0" y="446.2" font-size="11.2" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Iter 1: initial config</text>
+<text x="165.0" y="463.9" font-size="11.2" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Later: targeted change</text>
+<rect x="290" y="380" width="190" height="110" rx="10" ry="10" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.8"/>
+<text x="385.0" y="403.3" font-size="12.5" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Judge Agent</text>
+<text x="385.0" y="420.1" font-size="10.3" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">TEXT_MODEL · VISION_MODEL</text>
+<text x="385.0" y="436.90000000000003" font-size="10.3" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Apply config · run k6</text>
+<text x="385.0" y="453.70000000000005" font-size="10.3" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Text + vision diagnosis</text>
+<text x="385.0" y="470.5" font-size="10.3" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Holds veto power</text>
+<rect x="510" y="380" width="190" height="110" rx="10" ry="10" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.8"/>
+<text x="605.0" y="411.2" font-size="12.8" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Optimizer Agent</text>
+<text x="605.0" y="428.5" font-size="10.8" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Fireworks: OPTIMIZER_MODEL</text>
+<text x="605.0" y="445.8" font-size="10.8" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Propose next change</text>
+<text x="605.0" y="463.1" font-size="10.8" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Revise on veto (1 retry)</text>
+<rect x="730" y="380" width="190" height="110" rx="10" ry="10" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.8"/>
+<text x="825.0" y="410.8" font-size="13" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Veto Node</text>
+<text x="825.0" y="428.5" font-size="11.2" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Check safety constraints</text>
+<text x="825.0" y="446.2" font-size="11.2" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Allow 1 revision</text>
+<text x="825.0" y="463.9" font-size="11.2" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Forced fallback</text>
+<rect x="950" y="380" width="190" height="110" rx="10" ry="10" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.8"/>
+<text x="1045.0" y="419.35" font-size="13" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Persist Node</text>
+<text x="1045.0" y="437.65000000000003" font-size="11.8" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Write iteration to</text>
+<text x="1045.0" y="455.95000000000005" font-size="11.8" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Persistence DB</text>
+<rect x="1170" y="380" width="190" height="110" rx="10" ry="10" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.8"/>
+<text x="1265.0" y="410.2" font-size="13" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Terminate Node</text>
+<text x="1265.0" y="428.5" font-size="11.8" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">target_hit</text>
+<text x="1265.0" y="446.8" font-size="11.8" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">plateau-N</text>
+<text x="1265.0" y="465.1" font-size="11.8" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">max_iterations</text>
+<rect x="750" y="550" width="280" height="70" rx="10" ry="10" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.8"/>
+<text x="890.0" y="569.75" font-size="12.8" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Baseline God-Agent</text>
+<text x="890.0" y="587.25" font-size="11" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Fireworks: TEXT_MODEL</text>
+<text x="890.0" y="604.75" font-size="11" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Single call/iter: diagnose + propose</text>
+<rect x="110" y="760" width="340" height="80" rx="10" ry="10" fill="#2d1300" stroke="#f97316" stroke-width="1.8"/>
+<text x="280.0" y="793.5" font-size="14.5" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">FIREWORKS_TEXT_MODEL</text>
+<text x="280.0" y="813.0" font-size="13" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Text / reasoning</text>
+<rect x="580" y="760" width="340" height="80" rx="10" ry="10" fill="#2d1300" stroke="#f97316" stroke-width="1.8"/>
+<text x="750.0" y="793.5" font-size="14.5" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">FIREWORKS_OPTIMIZER_MODEL</text>
+<text x="750.0" y="813.0" font-size="13" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Optimizer decisions</text>
+<rect x="1050" y="760" width="340" height="80" rx="10" ry="10" fill="#2d1300" stroke="#f97316" stroke-width="1.8"/>
+<text x="1220.0" y="793.5" font-size="14.5" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">FIREWORKS_VISION_MODEL</text>
+<text x="1220.0" y="813.0" font-size="13" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Chart vision analysis</text>
+<rect x="70" y="950" width="380" height="110" rx="10" ry="10" fill="#1a1a2e" stroke="#6366f1" stroke-width="1.8"/>
+<text x="260.0" y="973.0" font-size="13" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">FastAPI</text>
+<text x="260.0" y="990.0" font-size="10.5" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">GET /users/{id} · /products/search</text>
+<text x="260.0" y="1007.0" font-size="10.5" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">POST /orders/ · GET /orders/{id}</text>
+<text x="260.0" y="1024.0" font-size="10.5" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">POST /admin/reconfigure</text>
+<text x="260.0" y="1041.0" font-size="10.5" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">POST /admin/reset-data · /db-stats</text>
+<rect x="480" y="950" width="230" height="110" rx="10" ry="10" fill="#1a1a2e" stroke="#6366f1" stroke-width="1.8"/>
+<text x="595.0" y="989.25" font-size="14.5" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">k6 Load Test</text>
+<text x="595.0" y="1007.75" font-size="12" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">50–200 VUs</text>
+<text x="595.0" y="1026.25" font-size="12" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Mixed CRUD pattern</text>
+<rect x="830" y="950" width="300" height="110" rx="10" ry="10" fill="#1c2814" stroke="#22c55e" stroke-width="1.8"/>
+<text x="980.0" y="980.6999999999999" font-size="13" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Service DB</text>
+<text x="980.0" y="998.4999999999999" font-size="11.3" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Postgres :5432</text>
+<text x="980.0" y="1016.3" font-size="11.3" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">users 2k · products 5k</text>
+<text x="980.0" y="1034.1" font-size="11.3" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">orders 10k · order_items</text>
+<rect x="1160" y="950" width="270" height="110" rx="10" ry="10" fill="#1c2814" stroke="#22c55e" stroke-width="1.8"/>
+<text x="1295.0" y="973.45" font-size="12.8" font-weight="700" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Persistence DB</text>
+<text x="1295.0" y="990.1500000000001" font-size="10.2" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">Postgres :5433</text>
+<text x="1295.0" y="1006.85" font-size="10.2" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">runs · iterations</text>
+<text x="1295.0" y="1023.5500000000001" font-size="10.2" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">config · metrics</text>
+<text x="1295.0" y="1040.25" font-size="10.2" font-weight="400" font-family="Helvetica, Arial, sans-serif" fill="#e2e8f0" text-anchor="middle">judge_analysis · veto_events</text>
+<path d="M750.0,125 L750.0,215" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<rect x="716.3" y="151.0" width="67.4" height="21" fill="#0f1117" opacity="0.95"/>
+<text x="750.0" y="162.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">HTTP REST</text>
+<path d="M750.0,285 L750.0,320 L165.0,320 L165.0,380" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="404.0" y="301.0" width="107.0" height="21" fill="#0f1117" opacity="0.95"/>
+<text x="457.5" y="312.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">background task</text>
+<path d="M750.0,285 L750.0,320 L935,320 L935,550" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="789.0" y="301.0" width="107.0" height="21" fill="#0f1117" opacity="0.95"/>
+<text x="842.5" y="312.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">background task</text>
+<path d="M260,435.0 L290,435.0" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M480,435.0 L510,435.0" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M700,435.0 L730,435.0" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M920,435.0 L950,435.0" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M1140,435.0 L1170,435.0" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M790.0,380 L790.0,358 L640.0,358 L640.0,380" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="651.6" y="339.0" width="126.8" height="21" fill="#0f1117" opacity="0.95"/>
+<text x="715.0" y="350.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">revision if vetoed</text>
+<path d="M1230.0,490 L1230.0,520 L200.0,520 L200.0,490" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="684.6" y="503.0" width="60.8" height="21" fill="#0f1117" opacity="0.95"/>
+<text x="715.0" y="514.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">not done</text>
+<path d="M165.0,490 L165.0,650 L180.0,650 L180.0,760" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<rect x="122.30000000000001" y="631.0" width="100.39999999999999" height="21" fill="#0f1117" opacity="0.95"/>
+<text x="172.5" y="642.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">propose config</text>
+<path d="M365.0,490 L365.0,662 L300.0,662 L300.0,760" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<rect x="282.3" y="643.0" width="100.39999999999999" height="21" fill="#0f1117" opacity="0.95"/>
+<text x="332.5" y="654.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">text diagnosis</text>
+<path d="M605.0,490 L605.0,674 L690.0,674 L690.0,760" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<rect x="587.4" y="655.0" width="120.19999999999999" height="21" fill="#0f1117" opacity="0.95"/>
+<text x="647.5" y="666.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">tradeoff decision</text>
+<path d="M405.0,490 L405.0,686 L1220.0,686 L1220.0,760" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<rect x="772.2" y="667.0" width="80.6" height="21" fill="#0f1117" opacity="0.95"/>
+<text x="812.5" y="678.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">chart image</text>
+<path d="M890.0,620 L890.0,700 L380.0,700 L380.0,760" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<rect x="578.2" y="681.0" width="113.6" height="21" fill="#0f1117" opacity="0.95"/>
+<text x="635.0" y="692.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">diagnose+propose</text>
+<path d="M330.0,490 L330.0,545 L18,545 L18,975.0 L70,975.0" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="154.10000000000002" y="517.0" width="159.79999999999998" height="34" fill="#0f1117" opacity="0.95"/>
+<text x="234.0" y="528.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">POST /admin/reconfigure</text>
+<text x="234.0" y="541.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">hot-swap pool</text>
+<path d="M375.0,490 L375.0,560 L28,560 L28,905 L555.0,905 L555.0,950" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="264.4" y="886.0" width="54.199999999999996" height="21" fill="#0f1117" opacity="0.95"/>
+<text x="291.5" y="897.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">trigger</text>
+<path d="M635.0,950 L635.0,895 L34,895 L34,570 L420.0,570 L420.0,490" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="294.2" y="863.0" width="80.6" height="34" fill="#0f1117" opacity="0.95"/>
+<text x="334.5" y="874.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">p95/p99/rps</text>
+<text x="334.5" y="887.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">error_rate</text>
+<path d="M200.0,1060 L200.0,1072 L1000.0,1072 L1000.0,1060" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<rect x="572.9" y="1053.0" width="54.199999999999996" height="21" fill="#0f1117" opacity="0.95"/>
+<text x="600.0" y="1064.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">asyncpg</text>
+<path d="M1035.0,490 L1035.0,880 L1255.0,880 L1255.0,950" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="1065.1" y="848.0" width="159.79999999999998" height="34" fill="#0f1117" opacity="0.95"/>
+<text x="1145.0" y="859.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">save iteration</text>
+<text x="1145.0" y="872.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">config · metrics · veto</text>
+<path d="M880,250.0 L1480,250.0 L1480,950 L1335.0,950" fill="none" stroke="#7c8493" stroke-width="1.6" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<rect x="1081.4" y="243.0" width="87.19999999999999" height="21" fill="#0f1117" opacity="0.95"/>
+<text x="1125.0" y="254.0" font-size="11.5" font-family="Helvetica, Arial, sans-serif" fill="#c3c9d3" text-anchor="middle">read history</text>
+</svg>

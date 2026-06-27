@@ -1,36 +1,31 @@
 # AMD Developer Hackathon: ACT II — Submission Checklist
 
 What's done, and what only you can finish. Kickoff is Jul 6, 2026; submissions
-close Jul 11, 2026.
+close Jul 11, 2026 (provisional — see item 4 below).
 
 ---
 
-## 1. Push the pivot to GitHub — do this first, it blocks everything else
+## Already done
 
-Three commits exist only on this machine and have never reached GitHub. Your
-public repo (`github.com/Levvvinnn/TuneFlow`) is still showing the **old
-pre-pivot README** (Qwen Cloud, Track 3, Alibaba Cloud) until you push:
-
-```
-806e58d  docs: add lablab.ai submission assets (cover image, slide deck, draft text)
-67bd957  docs: reposition pitch for AMD Developer Hackathon ACT II (Unicorn Track)
-dc55b14  feat: swap Qwen Cloud for Fireworks AI (AMD GPU-backed inference)
-```
-
-This sandbox has no GitHub credentials, so the push has to happen from your own
-machine:
-
-```bash
-git pull origin main --rebase   # if you've made any commits elsewhere
-git push origin main
-```
-
-Until this runs, every link in the submission form (repo, anything referencing
-README content) points at stale content. Do this before anything else below.
+- **Pushed to GitHub.** All pivot and submission commits are confirmed live on
+  `github.com/Levvvinnn/TuneFlow`'s `main` branch — the Qwen→Fireworks rename,
+  the AMD/product-first repositioning, and the submission assets (cover image,
+  slide deck, draft text, this checklist).
+- **`docs/architecture.png` regenerated.** It was still rendering the old
+  pre-pivot diagram (Qwen Cloud, Alibaba Cloud) even though the Mermaid source
+  (`docs/architecture.mmd`) was already correct. Both available rendering paths
+  (local headless Chromium, mermaid.ink's hosted API) are blocked by this
+  sandbox's network restrictions, so it's been hand-rebuilt as SVG directly from
+  the `.mmd` source's current node/edge/color structure and rendered to PNG —
+  no more Qwen/Alibaba content anywhere in the public repo. If you ever edit
+  `docs/architecture.mmd` again, the regeneration command in the README still
+  applies: `npx @mermaid-js/mermaid-cli -i docs/architecture.mmd -o docs/architecture.png -b "#0f1117" -w 1400 -H 900`.
+- Slide deck, cover image, submission draft text, content QA, and the test
+  suite — all from earlier in this checklist's history, still good.
 
 ---
 
-## 2. Get a real Fireworks AI API key
+## 1. Get a real Fireworks AI API key
 
 `.env.example` documents `FIREWORKS_API_KEY` but there's no real key anywhere
 in this sandbox (correctly — it shouldn't be). Sign up at
@@ -39,14 +34,14 @@ in this sandbox (correctly — it shouldn't be). Sign up at
 (common for these events), watch for that announcement on Jul 6 — it may
 replace or supplement a self-funded key.
 
-## 3. Confirm the model slugs once AMD announces its hackathon model catalog
+## 2. Confirm the model slugs once AMD announces its hackathon model catalog
 
 `FIREWORKS_TEXT_MODEL`, `FIREWORKS_OPTIMIZER_MODEL`, and
 `FIREWORKS_VISION_MODEL` in `.env.example` are currently placeholders/best
 guesses. AMD/Fireworks typically publish an approved model list at kickoff —
 swap in the real slugs once that's public.
 
-## 4. Run a full end-to-end smoke test with real LLM calls
+## 3. Run a full end-to-end smoke test with real LLM calls
 
 This sandbox has **no Docker at all** (confirmed, not just docker-compose
 unavailable), so I could not produce a fresh real run with actual Fireworks
@@ -65,25 +60,20 @@ This both validates the pivot actually works against the real Fireworks API
 (not just unit tests with mocked clients) and gives you fresh, real run data
 to reference live during your video recording.
 
-## 5. Regenerate `docs/architecture.png`
+Note: `persistence/store.py` has one uncommitted local change —
+`max_iterations` default went from `15` to `10` in `create_run`. It's harmless
+either way (callers can always pass an explicit value, as the smoke-test
+commands above do), but it's been left uncommitted pending your call on
+whether you actually want that default changed. Decide and either commit it
+or revert it before this run.
 
-It's still the pre-pivot render. The source (`docs/architecture.mmd`) is
-already correctly updated with Fireworks/AMD branding — only the rendered PNG
-is stale. Both rendering paths available to me (local headless Chromium,
-mermaid.ink's hosted API) are blocked by this sandbox's network restrictions.
-One command, on your machine:
-
-```bash
-npx @mermaid-js/mermaid-cli -i docs/architecture.mmd -o docs/architecture.png -b "#0f1117" -w 1400 -H 900
-```
-
-## 6. Record the demo video
+## 4. Record the demo video
 
 Script is ready at `docs/demo_script.md` (shot-by-shot, ~3 minutes). This
 needs your screen, your voice, and a live dashboard — not something I can
-produce. Do this after step 4 so you have a real run to show, not a stale one.
+produce. Do this after step 3 so you have a real run to show, not a stale one.
 
-## 7. Resolve the Demo Application URL question
+## 5. Resolve the Demo Application URL question
 
 The submission form asks for a **Demo Application Platform + URL**. TuneFlow
 runs locally via `docker-compose up` by design — there's no hosted instance.
@@ -99,23 +89,23 @@ infrastructure:
   This spends real money/credits — needs your explicit go-ahead, and I have not
   done this without it.
 
-## 8. Sign up / register
+## 6. Sign up / register
 
 - AMD AI Developer Program (likely required to access Fireworks credits or the
   hackathon's AMD platform track).
 - Register for "AMD Developer Hackathon: ACT II" on lablab.ai, Unicorn Track.
 
-## 9. Confirm the actual deadline
+## 7. Confirm the actual deadline
 
 lablab.ai's event page listed the Event Schedule as "To be announced" as of
 this writing. Confirm the exact submission cutoff once it's published —
 treat Jul 11, 2026 as provisional until then.
 
-## 10. Decide solo vs. team
+## 8. Decide solo vs. team
 
 Informational only — doesn't block anything, but lablab.ai will ask.
 
-## 11. Review the drafted submission content before pasting anywhere
+## 9. Review the drafted submission content before pasting anywhere
 
 Everything below is **drafted from already-verified project content** — no
 fabricated claims, no invented numbers — but none of it is final until you
@@ -127,12 +117,14 @@ read it and decide it's right:
 - `docs/TuneFlow_Pitch_Deck.pptx` — 9-slide deck (problem, solution,
   architecture, real comparison data, completeness, AMD platform usage,
   roadmap, closing). Visually QA'd; open it once yourself before uploading.
+- `docs/architecture.png` — just regenerated; take a quick look to confirm it
+  renders the way you want before it goes in front of judges.
 
-## 12. Submit
+## 10. Submit
 
-Once 1–11 are done: paste the title/descriptions/tags, upload the cover image,
-upload or link the video, attach the slide deck, link the (now-pushed) public
-repo, fill in the demo URL from step 7, and submit.
+Once 1–9 are done: paste the title/descriptions/tags, upload the cover image,
+upload or link the video, attach the slide deck, link the public repo, fill in
+the demo URL from step 5, and submit.
 
 ---
 
