@@ -18,7 +18,7 @@ from runner import run_load_test_with_repeats
 
 from chart import render_performance_chart
 from config_agent import PARAM_BOUNDS
-from fireworks_client import text_completion, vision_completion
+from fireworks_client import json_completion, text_completion, vision_completion
 
 SERVICE_URL = os.getenv("SERVICE_HOST", "http://localhost:8000")
 
@@ -108,19 +108,15 @@ Return a JSON object with:
                           {{"pool_size": "increase", "cache_ttl_seconds": "increase"}})
   trend: str ("improving" | "degrading" | "oscillating" | "stable")
 """
-    raw = await text_completion(prompt, JUDGE_SYSTEM, temperature=0.1)
-    # Parse JSON from response
-    raw = raw.strip()
-    if raw.startswith("```"):
-        raw = raw.split("\n", 1)[1] if "\n" in raw else raw
-        raw = raw.rsplit("```", 1)[0].strip()
     try:
-        return json.loads(raw)
-    except json.JSONDecodeError:
+        return await json_completion(prompt, JUDGE_SYSTEM, temperature=0.1)
+    except ValueError as e:
+        # json_completion raises ValueError when the model's response isn't valid JSON.
+        # Return a safe fallback so the loop continues rather than crashing.
         return {
             "bottleneck": "unknown",
             "severity": "medium",
-            "reasoning": raw[:500],
+            "reasoning": str(e)[:500],
             "recommended_direction": {},
             "trend": "unknown",
         }
