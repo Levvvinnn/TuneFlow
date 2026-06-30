@@ -15,11 +15,11 @@ from typing import Optional
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "loadtest"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "persistence"))
 
-import httpx
 from runner import run_load_test_with_repeats
 
 from config_agent import DEFAULT_CONFIG, PARAM_BOUNDS, clamp_config
 from fireworks_client import baseline_god_agent_completion
+from judge_agent import apply_config
 from termination import check_termination, score_from_metrics
 
 SERVICE_URL = os.getenv("SERVICE_HOST", "http://localhost:8000")
@@ -30,14 +30,6 @@ SYSTEM = (
     "(2) propose a configuration change to improve performance, and "
     "(3) explain your decision. Return valid JSON only."
 )
-
-
-async def apply_config(config: dict):
-    payload = {k: v for k, v in config.items() if k in PARAM_BOUNDS}
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.post(f"{SERVICE_URL}/admin/reconfigure", json=payload)
-        resp.raise_for_status()
-        return resp.json()
 
 
 async def god_agent_step(

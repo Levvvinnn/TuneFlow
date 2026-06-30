@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "loadtest"))
 from runner import run_load_test_with_repeats
 
 from chart import render_performance_chart
+from config_agent import PARAM_BOUNDS
 from fireworks_client import text_completion, vision_completion
 
 SERVICE_URL = os.getenv("SERVICE_HOST", "http://localhost:8000")
@@ -39,8 +40,13 @@ SAFETY_CONSTRAINTS = {
 
 
 async def apply_config(config: dict) -> dict:
-    """POST to /admin/reconfigure and return the response."""
-    payload = {k: v for k, v in config.items() if k != "rationale"}
+    """POST to /admin/reconfigure and return the response.
+
+    Whitelists the five tunable parameters so that metadata keys added by
+    the Optimizer Agent (rationale, change_summary, expected_effect, etc.)
+    are never forwarded to the service endpoint.
+    """
+    payload = {k: v for k, v in config.items() if k in PARAM_BOUNDS}
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(f"{SERVICE_URL}/admin/reconfigure", json=payload)
         resp.raise_for_status()
