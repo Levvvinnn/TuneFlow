@@ -98,14 +98,14 @@ class IterationResponse(BaseModel):
 async def _run_multi_agent_bg(run_id: str, req: StartRunRequest):
     _run_status[run_id] = {"status": "running", "current_iteration": 0, "latest_score": None}
     try:
-        def _status_update_save_fn(*args, **kwargs):
+        async def _status_update_save_fn(*args, **kwargs):
             """Wrap save_iteration to also update in-memory status."""
             it_num = kwargs.get("iteration_number", 0)
             metrics = kwargs.get("metrics", {})
             score = metrics.get("p95_latency_ms", 0) + metrics.get("error_rate", 0) * 10000
             _run_status[run_id]["current_iteration"] = it_num
             _run_status[run_id]["latest_score"] = score
-            return save_iteration(*args, **kwargs)
+            return await save_iteration(*args, **kwargs)
 
         final = await run_multi_agent(
             run_id=run_id,
@@ -141,13 +141,13 @@ async def _run_multi_agent_bg(run_id: str, req: StartRunRequest):
 async def _run_baseline_bg(run_id: str, req: StartRunRequest):
     _run_status[run_id] = {"status": "running", "current_iteration": 0, "latest_score": None}
     try:
-        def _status_save_fn(*args, **kwargs):
+        async def _status_save_fn(*args, **kwargs):
             it_num = kwargs.get("iteration_number", 0)
             metrics = kwargs.get("metrics", {})
             score = metrics.get("p95_latency_ms", 0) + metrics.get("error_rate", 0) * 10000
             _run_status[run_id]["current_iteration"] = it_num
             _run_status[run_id]["latest_score"] = score
-            return save_iteration(*args, **kwargs)
+            return await save_iteration(*args, **kwargs)
 
         result = await run_baseline(
             run_id=run_id,
