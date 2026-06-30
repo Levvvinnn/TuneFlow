@@ -52,9 +52,8 @@ class AgentState(TypedDict):
     termination_reason: Optional[str]
     error: Optional[str]
 
-    # Persistence callbacks (injected at runtime — not serialized)
+    # Persistence callback (injected at runtime — not serialized)
     _save_iteration: Optional[Any]
-    _update_iteration: Optional[Any]
 
 
 # ── Node implementations ──────────────────────────────────────────────────────
@@ -220,7 +219,7 @@ async def persist_node(state: AgentState) -> dict:
                 final_decision=state.get("final_decision"),
             )
         except Exception as e:
-            pass  # Persistence failure is non-fatal to the loop
+            print(f"[persist_node] WARNING: persistence write failed: {e}", flush=True)
 
     return {
         "iteration_history": new_history,
@@ -328,7 +327,6 @@ async def run_multi_agent(
         "termination_reason": None,
         "error": None,
         "_save_iteration": save_iteration_fn,
-        "_update_iteration": None,
     }
     final_state = await MULTI_AGENT_GRAPH.ainvoke(initial_state)
     return final_state
