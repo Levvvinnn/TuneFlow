@@ -25,10 +25,9 @@ from termination import check_termination, score_from_metrics
 SERVICE_URL = os.getenv("SERVICE_HOST", "http://localhost:8000")
 
 SYSTEM = (
-    "You are a backend performance optimization expert. In a single analysis, "
-    "you will (1) diagnose the current bottleneck from metrics, "
-    "(2) propose a configuration change to improve performance, and "
-    "(3) explain your decision. Return valid JSON only."
+    "You are a backend performance optimization expert. "
+    "Analyze load test metrics precisely, identify the primary bottleneck, "
+    "and propose targeted configuration changes. Respond with valid JSON only."
 )
 
 
@@ -42,9 +41,10 @@ async def god_agent_step(
     history_summary = [
         {
             "iter": h.get("iteration_number"),
-            "p95": h.get("p95_latency_ms"),
+            "p95_ms": h.get("p95_latency_ms"),
+            "p99_ms": h.get("p99_latency_ms"),
             "rps": h.get("throughput_rps"),
-            "err": h.get("error_rate"),
+            "err_rate": h.get("error_rate"),
             "config": h.get("config_applied"),
         }
         for h in iteration_history[-5:]
@@ -55,29 +55,43 @@ async def god_agent_step(
     prompt = f"""
 You are tuning a FastAPI + PostgreSQL service. This is iteration {iteration_number}.
 
+Objective: minimize p95 latency. Keep p99 within 2x of p95, error_rate near 0, and
+throughput stable. Only change parameters that directly address the identified bottleneck.
+
 Current configuration:
 {json.dumps(current_config, indent=2)}
 
 Last load test metrics:
 {metrics_block}
 
-Recent iteration history:
+Recent iteration history (last 5):
 {json.dumps(history_summary, indent=2)}
 
 Parameter bounds:
 {json.dumps(PARAM_BOUNDS, indent=2)}
 
-In ONE response:
-1. Diagnose the primary bottleneck
-2. Propose the complete next configuration (change at most 2 parameters)
-3. Explain your decision
+Diagnose the PRIMARY bottleneck by reasoning through each signal in turn:
+- p95 trend: is p95 improving, degrading, or oscillating across recent iterations?
+- p99 trend: is p99 tracking p95, or spiking independently? (independent p99 spikes suggest
+  timeout thrashing or pool exhaustion bursts)
+- error_rate: rising, falling, or stable? Rising errors with high latency → pool starvation
+  or timeout too aggressive.
+- throughput: if low but latency is OK → VU/connection limit, not a parameter tuning issue.
+- Overall trend: "improving" | "degrading" | "oscillating" | "stable"
+
+Then propose at most 2 parameter changes that directly address the bottleneck.
 
 Return a JSON object with:
-  bottleneck: str (e.g., "pool_exhaustion", "slow_queries", "cache_miss", "no_bottleneck")
-  diagnosis: str (2 sentences)
-  next_config: dict (all parameter keys with new values, within bounds)
-  rationale: str (why you chose these values)
-  expected_improvement: str (what you expect to happen)
+  bottleneck: str — one of: "pool_exhaustion", "slow_queries", "timeout_too_aggressive",
+              "cache_miss", "batch_inefficiency", "no_bottleneck", "unknown"
+  severity: str — "low" | "medium" | "high"
+  reasoning: str — 2-3 sentences citing the p95, p99, and error_rate trends you observed
+  trend: str — "improving" | "degrading" | "oscillating" | "stable"
+  recommended_direction: dict — which parameters to change and in which direction,
+                         e.g. {{"pool_size": "increase", "cache_ttl_seconds": "decrease"}}
+  next_config: dict — all 5 parameter keys with new values, within bounds
+  rationale: str — why these specific numeric values
+  expected_improvement: str — which metric you expect to improve and by how much
 """
     result = await baseline_god_agent_completion(prompt, SYSTEM)
 

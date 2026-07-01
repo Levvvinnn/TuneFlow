@@ -189,10 +189,14 @@ async def config_agent_completion(prompt: str, system: str) -> dict:
 
 
 async def baseline_god_agent_completion(prompt: str, system: str) -> dict:
-    """Single-agent baseline: one Fireworks call does propose+diagnose+decide."""
+    """Single-agent baseline: one Fireworks call does propose+diagnose+decide.
+
+    Uses the same model and temperature as the Judge's json_completion calls so
+    temperature is not a confound in the multi-agent vs. baseline comparison.
+    """
     return await json_completion(
         prompt=prompt,
         system=system,
         model=FIREWORKS_TEXT_MODEL,
-        temperature=0.2,
+        temperature=0.1,
     )
