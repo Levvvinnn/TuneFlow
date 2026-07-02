@@ -1,4 +1,0 @@
-alibabacloud-ecs20140526>=1.0.0
-alibabacloud-rds20140815>=1.0.0
-alibabacloud-tea-openapi>=0.3.0
-python-dotenv==1.0.1
