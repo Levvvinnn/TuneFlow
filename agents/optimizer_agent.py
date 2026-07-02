@@ -30,9 +30,10 @@ async def propose_next_config(
     history_summary = [
         {
             "iter": h.get("iteration_number"),
-            "p95": h.get("p95_latency_ms"),
+            "p95_ms": h.get("p95_latency_ms"),
+            "p99_ms": h.get("p99_latency_ms"),
             "rps": h.get("throughput_rps"),
-            "err": h.get("error_rate"),
+            "err_rate": h.get("error_rate"),
             "config": h.get("config_applied"),
         }
         for h in iteration_history[-6:]
