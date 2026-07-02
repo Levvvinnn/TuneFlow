@@ -44,8 +44,9 @@ Longer-term product direction: a customer connects a repository, TuneFlow deploy
 
 ![TuneFlow Architecture](docs/architecture.png)
 
-> The diagram source is [`docs/architecture.mmd`](docs/architecture.mmd) (Mermaid). Re-render with:
-> `npx @mermaid-js/mermaid-cli -i docs/architecture.mmd -o docs/architecture.png -b "#0f1117" -w 1400 -H 900`
+> The logical spec is [`docs/architecture.mmd`](docs/architecture.mmd) (Mermaid). The rendered
+> source is the hand-authored [`docs/architecture.svg`](docs/architecture.svg). To regenerate the PNG:
+> `pip install cairosvg && cairosvg docs/architecture.svg -o docs/architecture.png --scale 1.4`
 
 ---
 
