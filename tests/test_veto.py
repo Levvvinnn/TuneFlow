@@ -120,7 +120,6 @@ async def test_veto_node_one_revision_limit():
         "termination_reason": None,
         "error": None,
         "_save_iteration": None,
-        "_update_iteration": None,
     }
 
     with patch("graph.optimizer.revise_proposal", new_callable=AsyncMock) as mock_revise:
@@ -154,7 +153,7 @@ async def test_veto_node_revision_accepted():
         "proposed_config": None, "judge_output": {"metrics": {}, "text_diagnosis": {}},
         "optimizer_proposal": bad_proposal, "veto_event": None, "final_decision": None,
         "scores": [], "iteration_history": [], "termination_reason": None, "error": None,
-        "_save_iteration": None, "_update_iteration": None,
+        "_save_iteration": None,
     }
 
     with patch("graph.optimizer.revise_proposal", new_callable=AsyncMock) as mock_revise:
@@ -182,7 +181,7 @@ async def test_veto_node_no_veto_when_safe():
         "current_config": {"pool_size": 5, "query_timeout_ms": 3000, "cache_ttl_seconds": 60, "batch_size": 100, "retry_interval_ms": 100},
         "proposed_config": None, "judge_output": {}, "optimizer_proposal": safe_proposal,
         "veto_event": None, "final_decision": None, "scores": [], "iteration_history": [],
-        "termination_reason": None, "error": None, "_save_iteration": None, "_update_iteration": None,
+        "termination_reason": None, "error": None, "_save_iteration": None,
     }
 
     with patch("graph.optimizer.revise_proposal", new_callable=AsyncMock) as mock_revise:
