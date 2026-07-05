@@ -1,3 +1,21 @@
+"""
+TuneFlow Service Under Test — the FastAPI + PostgreSQL service that the
+multi-agent optimization loop benchmarks and reconfigures in real time.
+
+Endpoints:
+  GET  /health                  — liveness probe
+  GET  /users/{id}              — point lookup
+  GET  /users/sample-ids        — random sample for load test setup
+  GET  /products/search         — cached full-text search (cache-sensitive)
+  GET  /products/sample-ids     — random sample for load test setup
+  POST /orders/                 — create order (write with batch product lookup)
+  GET  /orders/{id}             — fetch order with items (join)
+  GET  /orders/sample-ids       — random sample for load test setup
+  POST /admin/reconfigure       — hot-swap DB connection pool (zero-downtime)
+  GET  /admin/config            — current runtime config
+  GET  /admin/db-stats          — live pg_stat_activity connection counts
+  POST /admin/reset-data        — truncate and reseed test data
+"""
 import os
 from contextlib import asynccontextmanager
 
