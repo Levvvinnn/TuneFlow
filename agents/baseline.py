@@ -182,8 +182,8 @@ async def run_baseline(
                     metrics=last_metrics,
                     baseline_decision=decision,
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[baseline] WARNING: persistence write failed: {e}", flush=True)
 
         # Termination check — identical logic as multi-agent
         term = check_termination(
