@@ -5,11 +5,12 @@ from typing import Optional
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
+from sqlalchemy import and_, func, or_, select
+
 from cache import get_product_cache
 from config import get_config
 from database import get_session
 from models import Product
-from sqlalchemy import select, or_
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -27,9 +28,8 @@ class ProductResponse(BaseModel):
 
 @router.get("/sample-ids")
 async def sample_product_ids(limit: int = Query(50, le=200)):
-    from sqlalchemy import func as sqlfunc
     async with get_session() as session:
-        result = await session.execute(select(Product.id).order_by(sqlfunc.random()).limit(limit))
+        result = await session.execute(select(Product.id).order_by(func.random()).limit(limit))
         return [str(row[0]) for row in result.fetchall()]
 
 
@@ -62,7 +62,6 @@ async def search_products(
         if category:
             filters.append(Product.category == category)
         if filters:
-            from sqlalchemy import and_
             stmt = stmt.where(and_(*filters))
         stmt = stmt.limit(limit)
         result = await session.execute(stmt)
