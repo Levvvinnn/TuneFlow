@@ -3,12 +3,12 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
+from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 
 from config import get_config
 from database import get_session
 from models import Order, OrderItem, Product, User
-from sqlalchemy import select, func
-from sqlalchemy.orm import selectinload
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
