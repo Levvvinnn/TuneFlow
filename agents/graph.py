@@ -102,7 +102,9 @@ async def judge_node(state: AgentState) -> dict:
             "error": None,
         }
     except Exception as e:
+        import traceback
         print(f"[judge_node] ERROR: {e}", flush=True)
+        print(f"[judge_node] TRACEBACK:\n{traceback.format_exc()}", flush=True)
         return {"error": f"Judge Agent failed: {e}"}
 
 

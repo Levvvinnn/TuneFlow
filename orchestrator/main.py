@@ -301,3 +301,10 @@ async def list_all_runs():
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    host = os.getenv("ORCHESTRATOR_HOST", "0.0.0.0")
+    port = int(os.getenv("ORCHESTRATOR_PORT", "8080"))
+    uvicorn.run("main:app", host=host, port=port, reload=False)

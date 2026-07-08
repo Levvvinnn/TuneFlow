@@ -22,15 +22,15 @@ FIREWORKS_BASE_URL = os.getenv(
     "https://api.fireworks.ai/inference/v1",
 )
 
-# Model identifiers — override via env once the AMD hackathon kickoff (Jul 6, 2026)
-# reveals the exact AMD-hosted catalog, or sooner if you want different models. These
-# defaults are real, currently-available Fireworks serverless model slugs as of the
-# last time this file was edited — double check https://fireworks.ai/models before
-# the demo in case a slug has since been retired.
-FIREWORKS_TEXT_MODEL = os.getenv("FIREWORKS_TEXT_MODEL", "accounts/fireworks/models/llama-v3p1-70b-instruct")
-FIREWORKS_OPTIMIZER_MODEL = os.getenv("FIREWORKS_OPTIMIZER_MODEL", "accounts/fireworks/models/deepseek-v3")
+# Model identifiers — override via env vars. Defaults are confirmed-serverless slugs
+# as of Jul 2026 (double-check https://fireworks.ai/models before any demo).
+# NOTE: As of Jul 2026, Fireworks serverless has no vision-capable model available.
+# FIREWORKS_VISION_MODEL falls back to the text model; vision calls fail gracefully
+# via the try/except in judge_agent.diagnose_vision → visual_insight is omitted.
+FIREWORKS_TEXT_MODEL = os.getenv("FIREWORKS_TEXT_MODEL", "accounts/fireworks/models/deepseek-v4-flash")
+FIREWORKS_OPTIMIZER_MODEL = os.getenv("FIREWORKS_OPTIMIZER_MODEL", "accounts/fireworks/models/deepseek-v4-flash")
 FIREWORKS_VISION_MODEL = os.getenv(
-    "FIREWORKS_VISION_MODEL", "accounts/fireworks/models/llama-v3p2-11b-vision-instruct"
+    "FIREWORKS_VISION_MODEL", "accounts/fireworks/models/deepseek-v4-flash"
 )
 
 TIMEOUT = 120.0
