@@ -178,6 +178,31 @@ function OptimizerPanel({ proposal }) {
   );
 }
 
+// ── Final config pills (always visible, no expand needed) ────────────────────
+
+function FinalConfigPills({ config }) {
+  if (!config) return null;
+  const params = PARAM_KEYS.filter((k) => config[k] != null);
+  if (!params.length) return null;
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginBottom: 5 }}>
+      {params.map((k) => (
+        <span key={k} style={{
+          background: "#0d2d1a",
+          color: "#34d399",
+          border: "1px solid #166534",
+          borderRadius: 3,
+          padding: "2px 7px",
+          fontSize: 10,
+          fontWeight: 700,
+        }}>
+          {PARAM_LABEL[k] ?? k}: {config[k]}{PARAM_UNIT[k] ?? ""}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 // ── Expandable cell ───────────────────────────────────────────────────────────
 
 function ExpandableCell({ label, value, renderContent }) {
@@ -286,8 +311,9 @@ export default function IterationTable({ iterations, mode }) {
 
                   {mode !== "baseline" && (
                     <td style={S.td}>
+                      <FinalConfigPills config={it.final_decision} />
                       <ExpandableCell
-                        label="proposal"
+                        label="rationale"
                         value={it.optimizer_proposal}
                         renderContent={(v) => <OptimizerPanel proposal={v} />}
                       />
