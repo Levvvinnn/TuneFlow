@@ -330,5 +330,12 @@ async def run_multi_agent(
         "error": None,
         "_save_iteration": save_iteration_fn,
     }
-    final_state = await MULTI_AGENT_GRAPH.ainvoke(initial_state)
+    # LangGraph's default recursion_limit is 25 steps. Each iteration visits 6 nodes
+    # (config → judge → optimizer → veto → persist → terminate), so the default cap
+    # is hit at iteration 4 (6×4+1 = 25). Scale the limit to cover max_iterations.
+    recursion_limit = max_iterations * 8 + 20  # 8 nodes/iter headroom + 20 buffer
+    final_state = await MULTI_AGENT_GRAPH.ainvoke(
+        initial_state,
+        config={"recursion_limit": recursion_limit},
+    )
     return final_state

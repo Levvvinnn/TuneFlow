@@ -97,6 +97,10 @@ services:
       - ./dashboard:/app
     environment:
       REACT_APP_ORCHESTRATOR_URL: http://localhost:8080
+      # Enable polling so webpack hot-reload works on Windows Docker (WSL2
+      # doesn't forward inotify events from host filesystem into containers)
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
     ports:
       - "3000:3000"
     command: sh -c "npm install && npm start"
