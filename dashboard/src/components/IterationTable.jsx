@@ -246,6 +246,30 @@ function VetoBadge({ vetoEvent }) {
   );
 }
 
+// ── Delta badge (p95 change vs previous iteration) ────────────────────────────
+
+function DeltaBadge({ current, previous }) {
+  if (previous == null || current == null) return null;
+  const delta = current - previous;
+  const pct   = previous > 0 ? ((delta / previous) * 100).toFixed(1) : null;
+  if (Math.abs(delta) < 1) return null;
+  const better = delta < 0;
+  return (
+    <span style={{
+      fontSize: 10,
+      fontWeight: 700,
+      color:       better ? "#4ade80" : "#f87171",
+      background:  better ? "rgba(22,101,52,0.25)" : "rgba(127,29,29,0.25)",
+      borderRadius: 4,
+      padding: "1px 5px",
+      marginLeft: 5,
+      verticalAlign: "middle",
+    }}>
+      {better ? "↓" : "↑"}{pct != null ? `${Math.abs(pct)}%` : `${Math.abs(delta).toFixed(0)}`}
+    </span>
+  );
+}
+
 // ── Main table ────────────────────────────────────────────────────────────────
 
 export default function IterationTable({ iterations, mode }) {
@@ -253,14 +277,26 @@ export default function IterationTable({ iterations, mode }) {
     return (
       <div style={S.card}>
         <div style={S.h2}>Iteration History</div>
-        <div style={{ color: "#64748b" }}>No iterations recorded yet.</div>
+        <div style={{ color: "#334155", fontSize: 13, padding: "12px 0" }}>
+          No iterations recorded yet — start a run to see data here.
+        </div>
       </div>
     );
   }
 
+  /* Find the best (lowest p95) iteration index for gold highlight */
+  const p95Values = iterations.map((it) => it.metrics?.p95_latency_ms ?? Infinity);
+  const bestP95   = Math.min(...p95Values);
+
   return (
     <div style={S.card}>
-      <div style={S.h2}>Iteration History</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 14 }}>
+        <div style={S.h2}>Iteration History</div>
+        <div style={{ fontSize: 11, color: "#475569" }}>
+          {iterations.length} iteration{iterations.length !== 1 ? "s" : ""}
+          {bestP95 < Infinity ? ` · best p95 ${bestP95.toFixed(0)} ms` : ""}
+        </div>
+      </div>
       <div style={{ overflowX: "auto" }}>
         <table style={S.table}>
           <thead>
@@ -277,17 +313,31 @@ export default function IterationTable({ iterations, mode }) {
             </tr>
           </thead>
           <tbody>
-            {iterations.map((it) => {
-              const m      = it.metrics || {};
-              const p95    = m.p95_latency_ms?.toFixed(0) ?? "—";
-              const rps    = m.throughput_rps?.toFixed(1) ?? "—";
-              const errPct = ((m.error_rate ?? 0) * 100).toFixed(2);
-              const hasVeto = it.veto_event?.vetoed;
+            {iterations.map((it, idx) => {
+              const m        = it.metrics || {};
+              const p95Raw   = m.p95_latency_ms;
+              const p95      = p95Raw?.toFixed(0) ?? "—";
+              const rps      = m.throughput_rps?.toFixed(1) ?? "—";
+              const errPct   = ((m.error_rate ?? 0) * 100).toFixed(2);
+              const hasVeto  = it.veto_event?.vetoed;
+              const isBest   = p95Raw != null && p95Raw === bestP95 && iterations.length > 1;
+              const prevP95  = idx > 0 ? (iterations[idx - 1].metrics?.p95_latency_ms ?? null) : null;
+
+              const rowStyle = isBest
+                ? { background: "rgba(161,138,0,0.1)", borderLeft: "2px solid #ca8a04" }
+                : hasVeto
+                  ? { background: "rgba(109,40,217,0.08)", borderLeft: "2px solid #7c3aed" }
+                  : {};
 
               return (
-                <tr key={it.iteration_number} style={hasVeto ? { background: "#140028" } : {}}>
-                  <td style={{ ...S.td, fontWeight: 700, color: "#e2e8f0" }}>{it.iteration_number}</td>
-                  <td style={{ ...S.td, color: Number(p95) > 500 ? "#f87171" : "#34d399", fontWeight: 600 }}>{p95}</td>
+                <tr key={it.iteration_number} style={rowStyle}>
+                  <td style={{ ...S.td, fontWeight: 700, color: isBest ? "#fbbf24" : "#e2e8f0" }}>
+                    {isBest ? "★ " : ""}{it.iteration_number}
+                  </td>
+                  <td style={{ ...S.td, color: Number(p95) > 500 ? "#f87171" : "#34d399", fontWeight: 600 }}>
+                    {p95}
+                    <DeltaBadge current={p95Raw} previous={prevP95} />
+                  </td>
                   <td style={{ ...S.td, color: "#94a3b8" }}>{rps}</td>
                   <td style={{ ...S.td, color: Number(errPct) > 1 ? "#f97316" : "#94a3b8" }}>{errPct}%</td>
 
