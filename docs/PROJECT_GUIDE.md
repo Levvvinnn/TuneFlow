@@ -27,21 +27,8 @@ hand off to the next, with the Judge holding veto power over changes that look
 unsafe, coordinated through LangGraph. A single-agent "baseline god-agent" mode runs
 the identical workload so that the difference between *this structure* and *one
 model doing it all* is a measurable, real number sitting in the dashboard's Compare
-tab, not a claim — useful supporting evidence for Completeness, not the project's
-pitch. Every agent's reasoning runs through Fireworks AI, whose inference executes
-on AMD GPUs — the project's concrete answer to the Unicorn Track's "Use of AMD
-Platforms" criterion.
-
-> **A note on this project's history.** TuneFlow was originally built for a
-> different hackathon track that targeted Qwen Cloud (DashScope) for LLM calls and
-> Alibaba Cloud for deployment. When the Alibaba Cloud account signup turned out to
-> be blocked, the project was retargeted to the AMD Developer Hackathon: ACT II
-> (Unicorn Track), and the LLM backend was swapped from Qwen Cloud to Fireworks AI —
-> whose serverless models run on AMD GPU hardware. The multi-agent architecture,
-> the veto mechanic, the real load-test ground truth, and the baseline comparison
-> are all unchanged; only the model provider and the hackathon framing moved. The
-> Alibaba deployment scripts under `infra/alibaba/` are kept in the repo but are not
-> part of this submission.
+tab, not a claim. Agent reasoning runs through Fireworks AI's serverless inference
+(DeepSeek V4 Flash).
 
 ---
 
@@ -147,9 +134,9 @@ not, the Optimizer gets exactly **one** revision attempt
 of 1 is enforced by `veto_node`'s own code, not by hoping the model stops on its own.
 If the revision is *also* unsafe, the node forces a fallback to the current
 (already-known-safe) config rather than letting an unsafe value through by
-exhaustion. This veto/one-revision mechanic is the concrete demonstration of
-disagreement resolution between agents that backs up the project's Creativity and
-Completeness story for the Unicorn Track.
+exhaustion. This veto/one-revision mechanic is the concrete, code-enforced answer
+to the "what if agents disagree?" problem — one revision attempt, one fallback, no
+infinite negotiation loops.
 
 **Node 5 — `persist_node`.** Writes one `Iteration` row to the persistence DB via
 `store.py`'s `save_iteration()` — every artifact from this iteration (config proposed,
@@ -446,45 +433,31 @@ dashboard/src/            React UI — Run / History / Compare tabs
 
 ---
 
-## 12. What's done, and what's still open
+## 12. Current state and open directions
 
-Local end-to-end is solid for both modes as of this writing — every bug in section
-7 has been fixed and re-verified against fresh real run data, and the cleanup pass
-(dead code, stray debug files, a stricter `.gitignore`) is done. Three items are
-intentionally **not** done on your behalf, because each one needs a decision only
-you can make:
+Local end-to-end is solid for both modes — every bug in section 7 has been fixed
+and re-verified against real run data, and the cleanup pass (dead code, stray debug
+files, a stricter `.gitignore`) is done. A few things you might want to pick up next:
 
-- **Pushing to GitHub.** Done — the Fireworks/AMD pivot (the Qwen→Fireworks
-  rename, the AMD framing, the product-first repositioning pass on this guide,
-  the README, and the demo script) plus the submission assets added afterward
-  (cover image, slide deck, draft text, this checklist) are all confirmed present
-  on `github.com/Levvvinnn/TuneFlow`'s `main` branch. This sandbox still has no
-  GitHub push credentials of its own — the push happened from your machine.
-- **Alibaba Cloud deployment.** No longer the active deployment plan — the AMD
-  hackathon submission runs locally via `docker-compose up`. `infra/alibaba/deploy.sh`
-  and `verify_deployment.py` still work if you ever want to revisit that path, but
-  running them spends real money/credits and isn't needed for this submission.
-- **Recording the demo video and slides.** The shot list is already written in
-  `docs/demo_script.md` (updated for the Fireworks AI / AMD framing). Section 8
-  above gives you a concrete, real-numbers talking point to use in it (baseline's
-  p99 regression vs. multi-agent catching it). The AMD ACT II submission on
-  lablab.ai also needs a slide presentation, a cover image, and a demo application
-  URL — none of those exist yet.
-- **Setting a real `FIREWORKS_API_KEY` and double-checking model slugs.** The
-  defaults in `.env.example` were real, live Fireworks model slugs as of when this
-  pivot was made — worth a quick check against https://fireworks.ai/models before
-  the demo, and again once AMD ACT II's kickoff (Jul 6, 2026) reveals the
-  AMD-hosted model catalog, in case anything's changed.
+- **Pushing to GitHub.** The sandbox has no push credentials — run
+  `git push origin main` from your own machine to publish any local commits.
+- **Alibaba Cloud deployment.** `infra/alibaba/deploy.sh` and `verify_deployment.py`
+  are kept for reference but aren't part of the active setup. The system runs
+  comfortably on a laptop via `docker-compose up`.
+- **Recording a walkthrough.** The shot list is in `docs/demo_script.md`. Section 8
+  above gives you a concrete real-numbers talking point (baseline's p99 regression
+  vs. multi-agent catching it).
+- **Fireworks AI model slugs.** The defaults in `.env.example` were confirmed
+  serverless as of Jul 2026 — worth a quick check at https://fireworks.ai/models
+  before any live demo.
 
 Everything else — the actual tuning loop, both modes, the bug fixes, the cleanup —
 is done and verified against real runs, not just unit tests.
 
-**A note on positioning, not code.** This demo tunes one service under one fixed
-workload, so a fair challenge is "doesn't it just find the same config every time?"
-In a single unchanging environment, yes — that's intentional for a short demo run.
-The README's [Vision](../README.md#vision-roadmap--not-built-for-this-submission)
-section lays out the actual product idea: the right config differs by environment
-(laptop vs. staging vs. production) and by workload shape (read-heavy vs.
-write-heavy), so a real deployment of this re-tunes continuously rather than
-solving once. None of the repo-connect/PR-automation part of that vision is built —
-it's pitch material for the submission, not a claim about current capability.
+**A note on scope, not code.** This demo tunes one service under one fixed
+workload, so a fair question is "doesn't it just find the same config every time?"
+In a single unchanging environment, yes — that's intentional for a controlled demo.
+The README's [Future direction](../README.md#future-direction) section lays out the
+actual product idea: the right config differs by environment (laptop vs. staging vs.
+production) and by workload shape (read-heavy vs. write-heavy), so a real deployment
+of this would re-tune continuously rather than solving once.

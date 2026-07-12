@@ -70,8 +70,8 @@ Service PostgreSQL  (:5432)
     │  Tables: users (2k), products (5k), orders (10k), order_items
     │  Extensions: pg_trgm (fuzzy search)
     └── runs as a Docker Compose service for local dev/demo
-        (infra/alibaba/ has a legacy, unused Alibaba Cloud ApsaraDB
-         deployment path from an earlier hackathon target)
+        (infra/alibaba/ has legacy, unused Alibaba Cloud ApsaraDB
+         deployment scripts — not part of the active setup)
 
 Persistence PostgreSQL  (:5433)
     │  Tables: runs, iterations

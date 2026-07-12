@@ -1,10 +1,6 @@
 """
 Centralized Fireworks AI API client.
 All text and vision calls route through here. Model identifiers come from env vars.
-
-Fireworks AI serves its models on AMD GPU hardware (MI300X-class), so agent
-reasoning — the Judge's bottleneck diagnosis and the Optimizer's tuning decisions —
-executes on AMD-hosted serverless inference rather than local compute.
 """
 import base64
 import json
