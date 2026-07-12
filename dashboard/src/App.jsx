@@ -104,7 +104,7 @@ export default function App() {
           <span style={S.logoIcon}>⚡</span>
           <span style={S.logo}>TuneFlow</span>
         </div>
-        <div style={S.tag}>Self-Tuning Backend · AMD Hackathon ACT II</div>
+        <div style={S.tag}>Self-Tuning Backend · Multi-Agent AI</div>
         <nav style={S.nav}>
           {NAV.map((t) => (
             <button key={t} style={S.navBtn(tab === t)} onClick={() => setTab(t)}>{t}</button>
