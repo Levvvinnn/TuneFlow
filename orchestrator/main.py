@@ -2,7 +2,6 @@
 TuneFlow Orchestrator — thin FastAPI that the dashboard talks to.
 Manages run lifecycle, polls status, returns history and comparison data.
 """
-import asyncio
 import os
 import sys
 import uuid
@@ -40,7 +39,7 @@ _run_status: dict[str, dict] = {}
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     await init_persistence_db()
     yield
 
