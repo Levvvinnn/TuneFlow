@@ -39,8 +39,9 @@ The loop is implemented as three specialized agents (**Config Agent**, **Judge A
 
 ![TuneFlow Architecture](docs/architecture.png)
 
-> Full diagram source: [`docs/architecture.mmd`](docs/architecture.mmd) (Mermaid).
-> To regenerate the PNG: `pip install cairosvg && cairosvg docs/architecture.svg -o docs/architecture.png --scale 1.4`
+> Interactive source: [`docs/architecture.excalidraw`](docs/architecture.excalidraw) — open in [excalidraw.com](https://excalidraw.com) for a zoomable, annotated view.
+> Text/CI source: [`docs/architecture.mmd`](docs/architecture.mmd) (Mermaid flowchart).
+> Regenerate PNG from Mermaid: `npx @mermaid-js/mermaid-cli -i docs/architecture.mmd -o docs/architecture.png -b "#0f1117" -w 1400 -H 900`
 
 ### Key design decisions
 
@@ -59,6 +60,26 @@ The loop is implemented as three specialized agents (**Config Agent**, **Judge A
 - **Fixed, controlled load only.** TuneFlow measures *relative configuration performance* at a fixed load (50–200 concurrent VUs). It does not predict or extrapolate to production-scale traffic.
 - **No full service restarts.** All changes go through `/admin/reconfigure` (hot-swap). This is by design — it isolates configuration quality from restart overhead.
 - **Five tunable parameters.** `pool_size`, `query_timeout_ms`, `cache_ttl_seconds`, `batch_size`, `retry_interval_ms`. The optimization loop and safety constraints are parameter-agnostic.
+
+---
+
+## Explore without Docker
+
+The repo ships sample run outputs so you can browse the full dashboard — convergence charts, per-iteration agent analysis, veto events, and the multi-agent vs. baseline comparison — without spinning up Docker or spending any Fireworks AI credits.
+
+```bash
+# 1. Install dashboard deps
+cd dashboard && npm install
+
+# 2. Start the dev server (no orchestrator needed)
+npm start
+```
+
+On first load the History tab shows an "⚡ Explore Demo Run" button that loads `docs/sample_run_output/multi_agent_run.json` directly into the UI. The Compare tab pre-populates with both demo runs so the convergence charts are visible immediately.
+
+The sample runs cover:
+- **Multi-agent run** (8 iterations, `target_hit`): four sequential bottlenecks — pool exhaustion → cache-miss spike → query latency → retry storm — each diagnosed and fixed in turn. Includes a veto event in iteration 3.
+- **Baseline run** (8 iterations, `plateau`): same starting conditions, god-agent increments pool size incrementally, stalls at 338ms p95 / 82.7 RPS.
 
 ---
 
@@ -148,6 +169,7 @@ LIVE_TEST_URL=http://localhost:8000 pytest tests/test_hotswap.py -v
   src/
     App.jsx                 3 tabs: Run / History / Compare
     api.js                  Orchestrator API client
+    sampleData.js           Embedded demo runs (no API needed)
     components/
       RunLauncher.jsx       Launch multi-agent or baseline run
       ConvergenceChart.jsx  p95/p99/RPS across iterations + stat pills
@@ -164,8 +186,13 @@ LIVE_TEST_URL=http://localhost:8000 pytest tests/test_hotswap.py -v
 
 /docs
   architecture.md
-  architecture.mmd  (Mermaid source)
-  PROJECT_GUIDE.md  Deep-dive: design decisions, traced iteration, bugs
+  architecture.mmd       Mermaid flowchart source
+  architecture.excalidraw  Interactive diagram (open in excalidraw.com)
+  PROJECT_GUIDE.md       Deep-dive: design decisions, traced iteration, bugs
+  demo_script.md         Walkthrough narration for live demos
+  sample_run_output/
+    multi_agent_run.json   8-iter multi-agent run (target_hit, includes veto)
+    baseline_run.json      8-iter baseline run (plateau, for comparison)
 
 /tests
   conftest.py
