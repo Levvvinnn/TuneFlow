@@ -33,7 +33,7 @@ export const DEMO_MULTI_AGENT = {
         "bottleneck": "pool_exhaustion",
         "severity": "high",
         "trend": "unknown",
-        "reasoning": "Pool exhausted under 100 VUs. asyncpg queue backing up \u2014 p95 climbing above 800ms with 4.2% error rate. Increasing pool_size is the highest-leverage single change.",
+        "reasoning": "Pool exhausted under 100 VUs. asyncpg queue backing up — p95 climbing above 800ms with 4.2% error rate. Increasing pool_size is the highest-leverage single change.",
         "recommended_direction": {
           "pool_size": "increase",
           "query_timeout_ms": "decrease"
@@ -51,8 +51,8 @@ export const DEMO_MULTI_AGENT = {
           "batch_size": 100,
           "retry_interval_ms": 100
         },
-        "rationale": "Primary action: pool size \u2014 increase. Pool exhausted under 100 VUs. asyncpg queue backing up \u2014 p95 climbing above 800m...",
-        "expected_effect": "Target p95 reduction of 10\u201320% based on bottleneck type and prior iteration delta.",
+        "rationale": "Primary action: pool size — increase. Pool exhausted under 100 VUs. asyncpg queue backing up — p95 climbing above 800m...",
+        "expected_effect": "Target p95 reduction of 10–20% based on bottleneck type and prior iteration delta.",
         "confidence": "high"
       },
       "veto_event": null,
@@ -91,7 +91,7 @@ export const DEMO_MULTI_AGENT = {
         "bottleneck": "pool_exhaustion",
         "severity": "medium",
         "trend": "improving",
-        "reasoning": "Pool expansion cut p95 by 35%. Error rate dropped from 4.2% to 1.1%. Still some queue depth under peak load \u2014 pool still slightly undersized for 100 VUs with mixed CRUD.",
+        "reasoning": "Pool expansion cut p95 by 35%. Error rate dropped from 4.2% to 1.1%. Still some queue depth under peak load — pool still slightly undersized for 100 VUs with mixed CRUD.",
         "recommended_direction": {
           "pool_size": "increase",
           "cache_ttl_seconds": "increase"
@@ -109,8 +109,8 @@ export const DEMO_MULTI_AGENT = {
           "batch_size": 100,
           "retry_interval_ms": 100
         },
-        "rationale": "Primary action: pool size \u2014 increase. Pool expansion cut p95 by 35%. Error rate dropped from 4.2% to 1.1%. Still some ...",
-        "expected_effect": "Target p95 reduction of 10\u201320% based on bottleneck type and prior iteration delta.",
+        "rationale": "Primary action: pool size — increase. Pool expansion cut p95 by 35%. Error rate dropped from 4.2% to 1.1%. Still some ...",
+        "expected_effect": "Target p95 reduction of 10–20% based on bottleneck type and prior iteration delta.",
         "confidence": "high"
       },
       "veto_event": null,
@@ -149,7 +149,7 @@ export const DEMO_MULTI_AGENT = {
         "bottleneck": "cache_miss_rate",
         "severity": "medium",
         "trend": "improving",
-        "reasoning": "Pool now sufficient. Product-search queries are the remaining bottleneck \u2014 40% of requests are /products/search hits, but cache TTL at 60s means frequent cache misses under shifting query patterns.",
+        "reasoning": "Pool now sufficient. Product-search queries are the remaining bottleneck — 40% of requests are /products/search hits, but cache TTL at 60s means frequent cache misses under shifting query patterns.",
         "recommended_direction": {
           "cache_ttl_seconds": "increase",
           "pool_size": "maintain"
@@ -167,8 +167,8 @@ export const DEMO_MULTI_AGENT = {
           "batch_size": 100,
           "retry_interval_ms": 100
         },
-        "rationale": "Primary action: cache ttl seconds \u2014 increase. Pool now sufficient. Product-search queries are the remaining bottleneck \u2014 40% o...",
-        "expected_effect": "Target p95 reduction of 10\u201320% based on bottleneck type and prior iteration delta.",
+        "rationale": "Primary action: cache ttl seconds — increase. Pool now sufficient. Product-search queries are the remaining bottleneck — 40% o...",
+        "expected_effect": "Target p95 reduction of 10–20% based on bottleneck type and prior iteration delta.",
         "confidence": "high"
       },
       "veto_event": {
@@ -221,7 +221,7 @@ export const DEMO_MULTI_AGENT = {
         "bottleneck": "query_latency",
         "severity": "medium",
         "trend": "improving",
-        "reasoning": "Cache TTL increase reduced repeated scan latency significantly. Remaining p95 is driven by slow individual order-detail queries \u2014 query_timeout is overly generous at 5000ms, masking slow-query detection.",
+        "reasoning": "Cache TTL increase reduced repeated scan latency significantly. Remaining p95 is driven by slow individual order-detail queries — query_timeout is overly generous at 5000ms, masking slow-query detection.",
         "recommended_direction": {
           "query_timeout_ms": "decrease",
           "batch_size": "increase"
@@ -239,8 +239,8 @@ export const DEMO_MULTI_AGENT = {
           "batch_size": 150,
           "retry_interval_ms": 100
         },
-        "rationale": "Primary action: query timeout ms \u2014 decrease. Cache TTL increase reduced repeated scan latency significantly. Remaining p95 is...",
-        "expected_effect": "Target p95 reduction of 10\u201320% based on bottleneck type and prior iteration delta.",
+        "rationale": "Primary action: query timeout ms — decrease. Cache TTL increase reduced repeated scan latency significantly. Remaining p95 is...",
+        "expected_effect": "Target p95 reduction of 10–20% based on bottleneck type and prior iteration delta.",
         "confidence": "medium"
       },
       "veto_event": null,
@@ -279,7 +279,7 @@ export const DEMO_MULTI_AGENT = {
         "bottleneck": "query_latency",
         "severity": "low",
         "trend": "improving",
-        "reasoning": "Tightened timeout and larger batch size improved order-create throughput. P95 now in the 200-250ms range. Minor oscillation visible \u2014 retry_interval slightly high, causing retry storms under marginal latency.",
+        "reasoning": "Tightened timeout and larger batch size improved order-create throughput. P95 now in the 200-250ms range. Minor oscillation visible — retry_interval slightly high, causing retry storms under marginal latency.",
         "recommended_direction": {
           "retry_interval_ms": "decrease",
           "pool_size": "increase"
@@ -297,8 +297,8 @@ export const DEMO_MULTI_AGENT = {
           "batch_size": 150,
           "retry_interval_ms": 75
         },
-        "rationale": "Primary action: retry interval ms \u2014 decrease. Tightened timeout and larger batch size improved order-create throughput. P95 no...",
-        "expected_effect": "Target p95 reduction of 10\u201320% based on bottleneck type and prior iteration delta.",
+        "rationale": "Primary action: retry interval ms — decrease. Tightened timeout and larger batch size improved order-create throughput. P95 no...",
+        "expected_effect": "Target p95 reduction of 10–20% based on bottleneck type and prior iteration delta.",
         "confidence": "medium"
       },
       "veto_event": null,
@@ -355,8 +355,8 @@ export const DEMO_MULTI_AGENT = {
           "batch_size": 150,
           "retry_interval_ms": 50
         },
-        "rationale": "Primary action: cache ttl seconds \u2014 increase. Reduced retry interval cut storm amplification. Pool at 30 providing good covera...",
-        "expected_effect": "Target p95 reduction of 10\u201320% based on bottleneck type and prior iteration delta.",
+        "rationale": "Primary action: cache ttl seconds — increase. Reduced retry interval cut storm amplification. Pool at 30 providing good covera...",
+        "expected_effect": "Target p95 reduction of 10–20% based on bottleneck type and prior iteration delta.",
         "confidence": "medium"
       },
       "veto_event": null,
@@ -395,7 +395,7 @@ export const DEMO_MULTI_AGENT = {
         "bottleneck": "stable",
         "severity": "low",
         "trend": "stable",
-        "reasoning": "System stable at 174ms p95, well below target. Throughput peaked at 99.8 RPS. Cache TTL at 600s serving most product-search from memory. No clear further bottleneck \u2014 marginal gains only.",
+        "reasoning": "System stable at 174ms p95, well below target. Throughput peaked at 99.8 RPS. Cache TTL at 600s serving most product-search from memory. No clear further bottleneck — marginal gains only.",
         "recommended_direction": {
           "cache_ttl_seconds": "maintain",
           "pool_size": "maintain"
@@ -413,8 +413,8 @@ export const DEMO_MULTI_AGENT = {
           "batch_size": 150,
           "retry_interval_ms": 50
         },
-        "rationale": "Primary action: cache ttl seconds \u2014 maintain. System stable at 174ms p95, well below target. Throughput peaked at 99.8 RPS. Ca...",
-        "expected_effect": "Target p95 reduction of 10\u201320% based on bottleneck type and prior iteration delta.",
+        "rationale": "Primary action: cache ttl seconds — maintain. System stable at 174ms p95, well below target. Throughput peaked at 99.8 RPS. Ca...",
+        "expected_effect": "Target p95 reduction of 10–20% based on bottleneck type and prior iteration delta.",
         "confidence": "medium"
       },
       "veto_event": null,
@@ -471,8 +471,8 @@ export const DEMO_MULTI_AGENT = {
           "batch_size": 150,
           "retry_interval_ms": 50
         },
-        "rationale": "Primary action: cache ttl seconds \u2014 maintain. Target achieved: 158ms p95, below 200ms target. Throughput at 101 RPS. All param...",
-        "expected_effect": "Target p95 reduction of 10\u201320% based on bottleneck type and prior iteration delta.",
+        "rationale": "Primary action: cache ttl seconds — maintain. Target achieved: 158ms p95, below 200ms target. Throughput at 101 RPS. All param...",
+        "expected_effect": "Target p95 reduction of 10–20% based on bottleneck type and prior iteration delta.",
         "confidence": "medium"
       },
       "veto_event": null,
