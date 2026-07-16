@@ -1,0 +1,320 @@
+{
+  "run_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+  "mode": "baseline",
+  "status": "finished",
+  "termination_reason": "plateau",
+  "iterations": [
+    {
+      "id": "f5765a48-98c3-433d-8a2b-bdfa11a7e60b",
+      "run_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "iteration_number": 1,
+      "config_applied": {
+        "pool_size": 5,
+        "query_timeout_ms": 5000,
+        "cache_ttl_seconds": 60,
+        "batch_size": 100,
+        "retry_interval_ms": 100
+      },
+      "metrics": {
+        "p95_latency_ms": 824,
+        "p99_latency_ms": 1260,
+        "throughput_rps": 42.1,
+        "error_rate": 0.045,
+        "avg_latency_ms": 535.6,
+        "median_latency_ms": 453.2,
+        "request_count": 2526,
+        "failure_count": 114
+      },
+      "judge_analysis": null,
+      "judge_vision_analysis": null,
+      "optimizer_proposal": null,
+      "veto_event": null,
+      "final_decision": null,
+      "baseline_decision": {
+        "diagnosis": "p95=824ms. Pool exhaustion dominant bottleneck.",
+        "proposed_config": {
+          "pool_size": 8,
+          "query_timeout_ms": 5000,
+          "cache_ttl_seconds": 60,
+          "batch_size": 100,
+          "retry_interval_ms": 100
+        },
+        "rationale": "Single-agent: increase pool_size by 3, stabilize other params."
+      },
+      "created_at": "2026-07-16T15:00:00+00:00"
+    },
+    {
+      "id": "61c54e48-bc81-49b2-a72f-bfb385d5a5b7",
+      "run_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "iteration_number": 2,
+      "config_applied": {
+        "pool_size": 10,
+        "query_timeout_ms": 5000,
+        "cache_ttl_seconds": 60,
+        "batch_size": 100,
+        "retry_interval_ms": 100
+      },
+      "metrics": {
+        "p95_latency_ms": 620,
+        "p99_latency_ms": 920,
+        "throughput_rps": 62.3,
+        "error_rate": 0.018,
+        "avg_latency_ms": 403.0,
+        "median_latency_ms": 341.0,
+        "request_count": 3738,
+        "failure_count": 67
+      },
+      "judge_analysis": null,
+      "judge_vision_analysis": null,
+      "optimizer_proposal": null,
+      "veto_event": null,
+      "final_decision": null,
+      "baseline_decision": {
+        "diagnosis": "p95=620ms. Pool exhaustion dominant bottleneck.",
+        "proposed_config": {
+          "pool_size": 13,
+          "query_timeout_ms": 5000,
+          "cache_ttl_seconds": 60,
+          "batch_size": 100,
+          "retry_interval_ms": 100
+        },
+        "rationale": "Single-agent: increase pool_size by 3, stabilize other params."
+      },
+      "created_at": "2026-07-16T15:08:00+00:00"
+    },
+    {
+      "id": "d9353f0d-a39a-4c71-bce8-8c19edb369d9",
+      "run_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "iteration_number": 3,
+      "config_applied": {
+        "pool_size": 15,
+        "query_timeout_ms": 5000,
+        "cache_ttl_seconds": 60,
+        "batch_size": 100,
+        "retry_interval_ms": 100
+      },
+      "metrics": {
+        "p95_latency_ms": 490,
+        "p99_latency_ms": 710,
+        "throughput_rps": 71.4,
+        "error_rate": 0.008,
+        "avg_latency_ms": 318.5,
+        "median_latency_ms": 269.5,
+        "request_count": 4284,
+        "failure_count": 34
+      },
+      "judge_analysis": null,
+      "judge_vision_analysis": null,
+      "optimizer_proposal": null,
+      "veto_event": null,
+      "final_decision": null,
+      "baseline_decision": {
+        "diagnosis": "p95=490ms. Incremental pool increases still improving but slowing.",
+        "proposed_config": {
+          "pool_size": 18,
+          "query_timeout_ms": 5000,
+          "cache_ttl_seconds": 60,
+          "batch_size": 100,
+          "retry_interval_ms": 100
+        },
+        "rationale": "Single-agent: increase pool_size by 3, stabilize other params."
+      },
+      "created_at": "2026-07-16T15:16:00+00:00"
+    },
+    {
+      "id": "9becb2a5-bd2d-4a06-88b1-f0d97bfeece2",
+      "run_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "iteration_number": 4,
+      "config_applied": {
+        "pool_size": 18,
+        "query_timeout_ms": 5000,
+        "cache_ttl_seconds": 60,
+        "batch_size": 100,
+        "retry_interval_ms": 100
+      },
+      "metrics": {
+        "p95_latency_ms": 415,
+        "p99_latency_ms": 590,
+        "throughput_rps": 76.8,
+        "error_rate": 0.004,
+        "avg_latency_ms": 269.8,
+        "median_latency_ms": 228.3,
+        "request_count": 4608,
+        "failure_count": 18
+      },
+      "judge_analysis": null,
+      "judge_vision_analysis": null,
+      "optimizer_proposal": null,
+      "veto_event": null,
+      "final_decision": null,
+      "baseline_decision": {
+        "diagnosis": "p95=415ms. Incremental pool increases still improving but slowing.",
+        "proposed_config": {
+          "pool_size": 21,
+          "query_timeout_ms": 5000,
+          "cache_ttl_seconds": 120,
+          "batch_size": 100,
+          "retry_interval_ms": 100
+        },
+        "rationale": "Single-agent: increase pool_size by 3, stabilize other params."
+      },
+      "created_at": "2026-07-16T15:24:00+00:00"
+    },
+    {
+      "id": "bfaf3b38-9d92-47dd-a761-b6fadff6021b",
+      "run_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "iteration_number": 5,
+      "config_applied": {
+        "pool_size": 20,
+        "query_timeout_ms": 5000,
+        "cache_ttl_seconds": 120,
+        "batch_size": 100,
+        "retry_interval_ms": 100
+      },
+      "metrics": {
+        "p95_latency_ms": 380,
+        "p99_latency_ms": 540,
+        "throughput_rps": 79.2,
+        "error_rate": 0.003,
+        "avg_latency_ms": 247.0,
+        "median_latency_ms": 209.0,
+        "request_count": 4752,
+        "failure_count": 14
+      },
+      "judge_analysis": null,
+      "judge_vision_analysis": null,
+      "optimizer_proposal": null,
+      "veto_event": null,
+      "final_decision": null,
+      "baseline_decision": {
+        "diagnosis": "p95=380ms. Incremental pool increases still improving but slowing.",
+        "proposed_config": {
+          "pool_size": 23,
+          "query_timeout_ms": 5000,
+          "cache_ttl_seconds": 120,
+          "batch_size": 100,
+          "retry_interval_ms": 100
+        },
+        "rationale": "Single-agent: increase pool_size by 3, stabilize other params."
+      },
+      "created_at": "2026-07-16T15:32:00+00:00"
+    },
+    {
+      "id": "1bf2b262-f5c3-4d83-920f-a8c3d1753459",
+      "run_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "iteration_number": 6,
+      "config_applied": {
+        "pool_size": 22,
+        "query_timeout_ms": 5000,
+        "cache_ttl_seconds": 120,
+        "batch_size": 100,
+        "retry_interval_ms": 100
+      },
+      "metrics": {
+        "p95_latency_ms": 360,
+        "p99_latency_ms": 510,
+        "throughput_rps": 81.0,
+        "error_rate": 0.003,
+        "avg_latency_ms": 234.0,
+        "median_latency_ms": 198.0,
+        "request_count": 4860,
+        "failure_count": 15
+      },
+      "judge_analysis": null,
+      "judge_vision_analysis": null,
+      "optimizer_proposal": null,
+      "veto_event": null,
+      "final_decision": null,
+      "baseline_decision": {
+        "diagnosis": "p95=360ms. Incremental pool increases still improving but slowing.",
+        "proposed_config": {
+          "pool_size": 25,
+          "query_timeout_ms": 5000,
+          "cache_ttl_seconds": 120,
+          "batch_size": 100,
+          "retry_interval_ms": 100
+        },
+        "rationale": "Single-agent: increase pool_size by 3, stabilize other params."
+      },
+      "created_at": "2026-07-16T15:40:00+00:00"
+    },
+    {
+      "id": "68673b66-9b18-4afa-8842-3cb04b33ee05",
+      "run_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "iteration_number": 7,
+      "config_applied": {
+        "pool_size": 22,
+        "query_timeout_ms": 5000,
+        "cache_ttl_seconds": 120,
+        "batch_size": 100,
+        "retry_interval_ms": 100
+      },
+      "metrics": {
+        "p95_latency_ms": 345,
+        "p99_latency_ms": 495,
+        "throughput_rps": 82.1,
+        "error_rate": 0.002,
+        "avg_latency_ms": 224.2,
+        "median_latency_ms": 189.8,
+        "request_count": 4926,
+        "failure_count": 10
+      },
+      "judge_analysis": null,
+      "judge_vision_analysis": null,
+      "optimizer_proposal": null,
+      "veto_event": null,
+      "final_decision": null,
+      "baseline_decision": {
+        "diagnosis": "p95=345ms. Incremental pool increases still improving but slowing.",
+        "proposed_config": {
+          "pool_size": 25,
+          "query_timeout_ms": 5000,
+          "cache_ttl_seconds": 120,
+          "batch_size": 100,
+          "retry_interval_ms": 100
+        },
+        "rationale": "Single-agent: increase pool_size by 3, stabilize other params."
+      },
+      "created_at": "2026-07-16T15:48:00+00:00"
+    },
+    {
+      "id": "44b8cf14-6b27-4939-82fa-f1b11018d27b",
+      "run_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "iteration_number": 8,
+      "config_applied": {
+        "pool_size": 22,
+        "query_timeout_ms": 5000,
+        "cache_ttl_seconds": 120,
+        "batch_size": 100,
+        "retry_interval_ms": 100
+      },
+      "metrics": {
+        "p95_latency_ms": 338,
+        "p99_latency_ms": 482,
+        "throughput_rps": 82.7,
+        "error_rate": 0.002,
+        "avg_latency_ms": 219.7,
+        "median_latency_ms": 185.9,
+        "request_count": 4962,
+        "failure_count": 10
+      },
+      "judge_analysis": null,
+      "judge_vision_analysis": null,
+      "optimizer_proposal": null,
+      "veto_event": null,
+      "final_decision": null,
+      "baseline_decision": {
+        "diagnosis": "p95=338ms. Incremental pool increases still improving but slowing.",
+        "proposed_config": {
+          "pool_size": 25,
+          "query_timeout_ms": 5000,
+          "cache_ttl_seconds": 120,
+          "batch_size": 100,
+          "retry_interval_ms": 100
+        },
+        "rationale": "Single-agent: increase pool_size by 3, stabilize other params."
+      },
+      "created_at": "2026-07-16T15:56:00+00:00"
+    }
+  ]
+}
