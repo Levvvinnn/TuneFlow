@@ -21,17 +21,26 @@ const S = {
   label: { color: "#94a3b8", fontSize: 13, minWidth: 80 },
 };
 
-export default function RunSelector({ onSelectA, onSelectB, selectedA, selectedB }) {
-  const [runs, setRuns] = useState([]);
+export default function RunSelector({ onSelectA, onSelectB, selectedA, selectedB, extraRuns = [] }) {
+  const [liveRuns, setLiveRuns] = useState([]);
 
   useEffect(() => {
-    listRuns().then(setRuns).catch(() => {});
-    const id = setInterval(() => listRuns().then(setRuns).catch(() => {}), 5000);
+    listRuns().then(setLiveRuns).catch(() => {});
+    const id = setInterval(() => listRuns().then(setLiveRuns).catch(() => {}), 5000);
     return () => clearInterval(id);
   }, []);
 
-  const renderOption = (r) =>
-    `${r.mode} — ${r.run_id.slice(0, 8)}… [${r.status}] ${r.created_at?.slice(0, 16) || ""}`;
+  // Merge live runs with demo runs, deduplicating by run_id
+  const runs = [
+    ...liveRuns,
+    ...extraRuns.filter((d) => !liveRuns.find((r) => r.run_id === d.run_id)),
+  ];
+
+  const renderOption = (r) => {
+    const modeLabel = r.mode === "multi_agent" ? "Multi-Agent" : "Baseline";
+    const demoMark = r.is_demo ? " [demo]" : "";
+    return `${modeLabel}${demoMark} — ${r.run_id.slice(0, 8)}… [${r.status}] ${r.created_at?.slice(0, 16) || ""}`;
+  };
 
   return (
     <div style={S.card}>
