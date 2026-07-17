@@ -4,7 +4,13 @@ Judge Agent:
   2. Runs load test (N repeats)
   3. Diagnoses bottleneck via text analysis + vision analysis of rendered chart
   4. Holds veto power over Optimizer proposals (max 1 revision per iteration)
+  5. Disagreement-based abstention (DBA): a second, *direct* single-shot diagnosis
+     is compared against the decomposed pipeline's diagnosis; if the two disagree
+     on the bottleneck, the belief is treated as fragile and the iteration
+     abstains from changing the config. Based on "Decomposed Prompting Does Not
+     Fix Knowledge Gaps, But Helps Models Say 'I Don't Know'" (arXiv:2602.04853).
 """
+import asyncio
 import json
 import os
 import sys
@@ -27,6 +33,37 @@ JUDGE_SYSTEM = (
     "Analyze load test metrics and identify the primary bottleneck. "
     "Be precise and actionable."
 )
+
+# ── Disagreement-Based Abstention (DBA) ──────────────────────────────────────
+# arXiv:2602.04853: cross-regime disagreement between a direct (single-shot)
+# answer and a decomposed answer is a precise signal of a fragile belief.
+# When the two diagnoses disagree, abstain (keep current config) instead of
+# applying an uncertain change. Toggle via env; enabled by default.
+
+def dba_enabled() -> bool:
+    return os.getenv("DBA_ABSTENTION", "true").strip().lower() in ("1", "true", "yes", "on")
+
+
+def check_diagnosis_agreement(direct: Optional[dict], decomposed: Optional[dict]) -> tuple[bool, str]:
+    """
+    Compare the direct single-shot diagnosis with the decomposed pipeline diagnosis.
+
+    Returns (agree, reason). Missing or "unknown" diagnoses are treated as
+    non-comparable → agree=True (we only abstain on a *confident* conflict,
+    mirroring the paper's use of disagreement — not absence — as the signal).
+    """
+    d = (direct or {}).get("bottleneck")
+    c = (decomposed or {}).get("bottleneck")
+    if not d or not c or d == "unknown" or c == "unknown":
+        return True, "not comparable (missing or unknown diagnosis) — no abstention"
+    if d == c:
+        return True, f"direct and decomposed diagnoses agree on '{c}'"
+    return (
+        False,
+        f"direct diagnosis '{d}' disagrees with decomposed diagnosis '{c}' — "
+        "fragile belief, abstaining this iteration (DBA, arXiv:2602.04853)",
+    )
+
 
 # Safety constraints for veto decisions
 SAFETY_CONSTRAINTS = {
@@ -122,6 +159,50 @@ Return a JSON object with:
         }
 
 
+async def diagnose_direct(metrics: dict, config_applied: dict, iteration_history: list[dict]) -> dict:
+    """
+    DIRECT diagnosis regime (DBA, arXiv:2602.04853).
+
+    Task-equivalent to diagnose_text — same inputs, same output schema — but with
+    NO diagnostic scaffold: no signal-by-signal walkthrough, no decision rules,
+    just the raw question. Cross-checking this direct answer against the
+    decomposed diagnosis exposes fragile beliefs: stable knowledge answers the
+    same under both regimes, hallucinations are stochastic and diverge.
+    """
+    history_summary = [
+        {
+            "iteration": h.get("iteration_number"),
+            "p95_ms": h.get("p95_latency_ms"),
+            "rps": h.get("throughput_rps"),
+            "error_rate": h.get("error_rate"),
+            "config": h.get("config_applied"),
+        }
+        for h in iteration_history[-5:]
+    ]
+
+    prompt = f"""
+What is the PRIMARY performance bottleneck of this FastAPI + PostgreSQL service?
+
+Current metrics:
+{json.dumps(metrics, indent=2)}
+
+Config applied for this iteration:
+{json.dumps(config_applied, indent=2)}
+
+Recent iteration history:
+{json.dumps(history_summary, indent=2)}
+
+Return a JSON object with:
+  bottleneck: str (one of: "pool_exhaustion", "slow_queries", "timeout_too_aggressive",
+                   "cache_miss", "batch_inefficiency", "no_bottleneck", "unknown")
+  reasoning: str (1 sentence)
+"""
+    try:
+        return await json_completion(prompt, JUDGE_SYSTEM, temperature=0.1)
+    except ValueError as e:
+        return {"bottleneck": "unknown", "reasoning": str(e)[:200]}
+
+
 async def diagnose_vision(chart_path: str, metrics: dict) -> dict:
     """Vision-based diagnosis using rendered chart image — adds a second signal."""
     prompt = f"""
@@ -200,7 +281,7 @@ async def full_judge_cycle(
     Full Judge cycle:
     1. Apply config
     2. Run load test
-    3. Text diagnosis
+    3. Text diagnosis (decomposed) + direct diagnosis (DBA cross-check), concurrent
     4. Vision diagnosis (best-effort — won't block if vision API fails)
     Returns a dict with all Judge outputs.
     """
@@ -210,8 +291,16 @@ async def full_judge_cycle(
     # 2. Run load test
     metrics = await run_and_measure(vus=vus, duration_seconds=duration_seconds, repeats=repeats)
 
-    # 3. Text diagnosis
-    text_diag = await diagnose_text(metrics, proposed_config, iteration_history)
+    # 3. Decomposed text diagnosis + direct diagnosis (concurrent — no added latency).
+    #    The direct call is only made when DBA abstention is enabled.
+    direct_diag = None
+    if dba_enabled():
+        text_diag, direct_diag = await asyncio.gather(
+            diagnose_text(metrics, proposed_config, iteration_history),
+            diagnose_direct(metrics, proposed_config, iteration_history),
+        )
+    else:
+        text_diag = await diagnose_text(metrics, proposed_config, iteration_history)
 
     # 4. Vision diagnosis — build chart and analyze
     vision_diag = None
@@ -251,10 +340,21 @@ async def full_judge_cycle(
             except Exception:
                 pass
 
+    # Record the DBA cross-check inside text_diagnosis so it persists with
+    # judge_analysis without any DB schema change.
+    if direct_diag is not None:
+        agree, agree_reason = check_diagnosis_agreement(direct_diag, text_diag)
+        text_diag["direct_check"] = {
+            "bottleneck": direct_diag.get("bottleneck"),
+            "agrees": agree,
+            "detail": agree_reason,
+        }
+
     return {
         "metrics": metrics,
         "config_applied": proposed_config,
         "apply_result": apply_result,
         "text_diagnosis": text_diag,
+        "direct_diagnosis": direct_diag,
         "vision_diagnosis": vision_diag,
     }

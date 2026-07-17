@@ -125,16 +125,52 @@ async def optimizer_node(state: AgentState) -> dict:
 
 async def veto_node(state: AgentState) -> dict:
     """
-    Check optimizer proposal against safety constraints.
-    If vetoed, allow exactly ONE revision attempt.
-    Enforces the round limit in code — a stuck negotiation cannot eat the iteration budget.
+    Two-stage veto:
+
+    1. Disagreement-based abstention (DBA, arXiv:2602.04853): if the Judge's
+       direct single-shot diagnosis disagrees with the decomposed pipeline's
+       diagnosis, the underlying belief is fragile — abstain by keeping the
+       current config for this iteration rather than applying an uncertain
+       change. Training-free; disagreement, not self-reported confidence,
+       is the reliability signal.
+
+    2. Safety constraints: if the proposal violates a hard constraint, allow
+       exactly ONE revision attempt. Enforced in code — a stuck negotiation
+       cannot eat the iteration budget.
     """
     proposal = state.get("optimizer_proposal", {})
     judge_out = state.get("judge_output", {})
 
+    # ── Stage 1: DBA cross-regime disagreement check ──
+    if judge.dba_enabled():
+        direct_diag = judge_out.get("direct_diagnosis")
+        decomposed_diag = judge_out.get("text_diagnosis")
+        agree, dba_reason = judge.check_diagnosis_agreement(direct_diag, decomposed_diag)
+        if not agree:
+            veto_event = {
+                "vetoed": True,
+                "veto_type": "disagreement_abstention",
+                "reason": dba_reason,
+                "direct_bottleneck": (direct_diag or {}).get("bottleneck"),
+                "decomposed_bottleneck": (decomposed_diag or {}).get("bottleneck"),
+                "abstained": True,
+                "revision_attempt": 0,
+                "original_proposal": {
+                    k: v for k, v in proposal.items() if k in cfg_agent.PARAM_BOUNDS
+                },
+            }
+            # Abstain: keep the measured current config, discard the proposal.
+            return {
+                "final_decision": state["current_config"],
+                "veto_event": veto_event,
+                "error": None,
+            }
+
+    # ── Stage 2: safety-constraint veto ──
     is_safe, reason = judge.check_safety_constraints(proposal)
     veto_event: dict = {
         "vetoed": not is_safe,
+        "veto_type": "safety_constraint" if not is_safe else None,
         "reason": reason,
         "revision_attempt": 0,
         "original_proposal": {k: v for k, v in proposal.items() if k in cfg_agent.PARAM_BOUNDS},

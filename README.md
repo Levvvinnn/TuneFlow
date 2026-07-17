@@ -51,6 +51,8 @@ The loop is implemented as three specialized agents (**Config Agent**, **Judge A
 
 **Code-enforced veto round limit.** The veto node allows exactly one revision attempt, enforced in code — not by prompting the model to "stop after one try." This prevents a stuck negotiation from eating the iteration budget.
 
+**Disagreement-based abstention.** Alongside its decomposed step-by-step diagnosis, the Judge makes a second *direct* single-shot diagnosis of the same metrics (concurrently — no added latency). If the two disagree on the bottleneck, the belief is treated as fragile and the iteration abstains: the current config is kept rather than applying an uncertain change. This adapts the cross-regime disagreement signal from ["Decomposed Prompting Does Not Fix Knowledge Gaps, But Helps Models Say 'I Don't Know'"](https://arxiv.org/abs/2602.04853) — factual knowledge is stable across prompting regimes while hallucinations are stochastic, so disagreement is a precise, training-free error signal. Toggle with `DBA_ABSTENTION` in `.env`.
+
 **Baseline comparison mode.** A single god-agent baseline runs the identical workload so that the difference between the multi-agent structure and one model doing everything is a measurable number in the Compare tab.
 
 ---

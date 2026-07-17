@@ -27,6 +27,7 @@ LangGraph Graph  (multi-agent)
     │     apply config via /admin/reconfigure         + (FIREWORKS_VISION_MODEL, vision)
     │     run k6 load test (2–3 repeats)
     │     text diagnosis (bottleneck, severity, trend)
+    │     direct diagnosis (single-shot DBA cross-check, concurrent)
     │     vision diagnosis (chart image → visual pattern)
     │     veto unsafe Optimizer proposals
     │
@@ -35,7 +36,8 @@ LangGraph Graph  (multi-agent)
     │     one revision on veto (round limit = 1, enforced in code)
     │
     ├── Veto Node
-    │     check safety constraints
+    │     stage 1: DBA disagreement check → abstain if direct ≠ decomposed diagnosis
+    │     stage 2: check safety constraints
     │     allow 1 revision, then forced fallback
     │
     ├── Persist Node
@@ -96,11 +98,17 @@ k6 Load Test
    a. POST /admin/reconfigure → pool drains, new engine created
    b. k6 run × 2 repeats → averaged metrics (p95, p99, rps, err_rate)
    c. GET /admin/db-stats → connection count
-   d. Text call (Fireworks AI, FIREWORKS_TEXT_MODEL): structured bottleneck diagnosis
+   d. Two concurrent text calls (Fireworks AI, FIREWORKS_TEXT_MODEL):
+      - decomposed diagnosis: structured signal-by-signal bottleneck analysis
+      - direct diagnosis: same question, no scaffold (DBA cross-check)
    e. Render Matplotlib chart → vision call (Fireworks AI, FIREWORKS_VISION_MODEL): visual pattern
    f. Combine text + vision into unified diagnosis
 3. Optimizer Agent (Fireworks AI, FIREWORKS_OPTIMIZER_MODEL): propose next config change
-4. Veto Node: check safety constraints
+4. Veto Node (two stages):
+   Stage 1 — disagreement-based abstention (arXiv:2602.04853):
+   → if direct diagnosis ≠ decomposed diagnosis: abstain — keep current config,
+     discard the proposal (fragile belief; no revision round consumed)
+   Stage 2 — safety constraints:
    → if violated: Optimizer revises (1 retry max, then forced fallback)
    → if safe: accept as final_decision
 5. Persist Node: save all iteration data to Persistence DB

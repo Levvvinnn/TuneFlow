@@ -230,6 +230,16 @@ function ExpandableCell({ label, value, renderContent }) {
 
 function VetoBadge({ vetoEvent }) {
   if (!vetoEvent?.vetoed) return null;
+  if (vetoEvent.veto_type === "disagreement_abstention") {
+    return (
+      <span>
+        <span style={{ ...S.vetoBadge, background: "#b45309" }}>ABSTAINED</span>
+        <div style={{ fontSize: 10, color: "#fbbf24", marginTop: 4 }}>
+          direct: {vetoEvent.direct_bottleneck || "?"} ≠ decomposed: {vetoEvent.decomposed_bottleneck || "?"}
+        </div>
+      </span>
+    );
+  }
   return (
     <span>
       <span style={S.vetoBadge}>VETOED</span>
