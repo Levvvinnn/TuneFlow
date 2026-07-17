@@ -44,6 +44,21 @@ def dba_enabled() -> bool:
     return os.getenv("DBA_ABSTENTION", "true").strip().lower() in ("1", "true", "yes", "on")
 
 
+def dba_shadow_mode() -> bool:
+    """
+    Shadow mode: still compute and record the disagreement check, but do NOT
+    abstain — let the Optimizer's proposal through as normal. This exists
+    purely to collect evaluation data: real abstention keeps the config
+    unchanged, so there is no way to tell, after the fact, whether the
+    decomposed diagnosis the model disagreed with would actually have been
+    right. Shadow mode lets both agreement and disagreement iterations run to
+    completion so scripts/analyze_dba_outcomes.py can measure, empirically,
+    whether disagreement iterations produce worse outcomes than agreement
+    iterations — instead of assuming it either way.
+    """
+    return os.getenv("DBA_SHADOW_MODE", "false").strip().lower() in ("1", "true", "yes", "on")
+
+
 def check_diagnosis_agreement(direct: Optional[dict], decomposed: Optional[dict]) -> tuple[bool, str]:
     """
     Compare the direct single-shot diagnosis with the decomposed pipeline diagnosis.

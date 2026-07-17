@@ -134,6 +134,13 @@ async def veto_node(state: AgentState) -> dict:
        change. Training-free; disagreement, not self-reported confidence,
        is the reliability signal.
 
+       DBA_SHADOW_MODE=true still records the disagreement in veto_event
+       ("would_abstain") but does NOT abstain — the proposal proceeds to
+       stage 2 as normal. Real abstention keeps the config unchanged, which
+       makes it impossible to later check whether the diagnosis it distrusted
+       would have actually been right. Shadow mode exists to collect that
+       evidence; see scripts/analyze_dba_outcomes.py.
+
     2. Safety constraints: if the proposal violates a hard constraint, allow
        exactly ONE revision attempt. Enforced in code — a stuck negotiation
        cannot eat the iteration budget.
@@ -142,17 +149,26 @@ async def veto_node(state: AgentState) -> dict:
     judge_out = state.get("judge_output", {})
 
     # ── Stage 1: DBA cross-regime disagreement check ──
+    dba_info = None
     if judge.dba_enabled():
         direct_diag = judge_out.get("direct_diagnosis")
         decomposed_diag = judge_out.get("text_diagnosis")
         agree, dba_reason = judge.check_diagnosis_agreement(direct_diag, decomposed_diag)
-        if not agree:
+        dba_info = {
+            "checked": True,
+            "agrees": agree,
+            "direct_bottleneck": (direct_diag or {}).get("bottleneck"),
+            "decomposed_bottleneck": (decomposed_diag or {}).get("bottleneck"),
+            "reason": dba_reason,
+        }
+        if not agree and not judge.dba_shadow_mode():
             veto_event = {
                 "vetoed": True,
                 "veto_type": "disagreement_abstention",
                 "reason": dba_reason,
-                "direct_bottleneck": (direct_diag or {}).get("bottleneck"),
-                "decomposed_bottleneck": (decomposed_diag or {}).get("bottleneck"),
+                "dba": dba_info,
+                "direct_bottleneck": dba_info["direct_bottleneck"],
+                "decomposed_bottleneck": dba_info["decomposed_bottleneck"],
                 "abstained": True,
                 "revision_attempt": 0,
                 "original_proposal": {
@@ -165,6 +181,9 @@ async def veto_node(state: AgentState) -> dict:
                 "veto_event": veto_event,
                 "error": None,
             }
+        # else: agreement, or disagreement-but-shadow-mode → fall through to
+        # the safety check; dba_info carries forward into whatever veto_event
+        # gets built below so the disagreement is still recorded for analysis.
 
     # ── Stage 2: safety-constraint veto ──
     is_safe, reason = judge.check_safety_constraints(proposal)
@@ -175,6 +194,10 @@ async def veto_node(state: AgentState) -> dict:
         "revision_attempt": 0,
         "original_proposal": {k: v for k, v in proposal.items() if k in cfg_agent.PARAM_BOUNDS},
     }
+    if dba_info is not None:
+        veto_event["dba"] = dba_info
+        if not dba_info["agrees"]:
+            veto_event["would_abstain"] = True  # shadow-mode marker: proposal applied anyway
 
     if is_safe:
         return {

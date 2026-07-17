@@ -10,7 +10,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "agents"))
 
-from judge_agent import check_diagnosis_agreement, dba_enabled
+from judge_agent import check_diagnosis_agreement, dba_enabled, dba_shadow_mode
 
 
 # ── check_diagnosis_agreement ─────────────────────────────────────────────────
@@ -191,6 +191,46 @@ async def test_veto_node_no_abstention_when_direct_unknown(monkeypatch):
 
     assert result["veto_event"]["vetoed"] is False
     assert result["final_decision"] == SAFE_PROPOSAL
+
+
+@pytest.mark.asyncio
+async def test_veto_node_shadow_mode_records_but_does_not_abstain(monkeypatch):
+    """
+    DBA_SHADOW_MODE=true: disagreement is recorded on veto_event (with
+    would_abstain=True) but the proposal still goes through — needed so
+    scripts/analyze_dba_outcomes.py can measure what would have happened.
+    """
+    monkeypatch.setenv("DBA_ABSTENTION", "true")
+    monkeypatch.setenv("DBA_SHADOW_MODE", "true")
+    from graph import veto_node
+
+    judge_output = {
+        "metrics": {},
+        "text_diagnosis": {"bottleneck": "pool_exhaustion"},
+        "direct_diagnosis": {"bottleneck": "cache_miss"},
+    }
+    state = _base_state(judge_output, SAFE_PROPOSAL)
+
+    result = await veto_node(state)
+
+    veto_event = result["veto_event"]
+    # Not abstained — proposal applied despite the disagreement
+    assert veto_event["vetoed"] is False
+    assert veto_event["would_abstain"] is True
+    assert veto_event["dba"]["agrees"] is False
+    assert veto_event["dba"]["direct_bottleneck"] == "cache_miss"
+    assert veto_event["dba"]["decomposed_bottleneck"] == "pool_exhaustion"
+    assert result["final_decision"] == SAFE_PROPOSAL
+
+
+def test_dba_shadow_mode_disabled_by_default(monkeypatch):
+    monkeypatch.delenv("DBA_SHADOW_MODE", raising=False)
+    assert dba_shadow_mode() is False
+
+
+def test_dba_shadow_mode_enabled_via_env(monkeypatch):
+    monkeypatch.setenv("DBA_SHADOW_MODE", "true")
+    assert dba_shadow_mode() is True
 
 
 @pytest.mark.asyncio
