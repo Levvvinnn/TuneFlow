@@ -196,18 +196,18 @@ def print_report(rows: list[OutcomeRow], summary: dict) -> None:
         print("Comparison (agree vs. disagree-shadow):")
         rate_diff = disagree["improved_rate"] - agree["improved_rate"]
         delta_diff = disagree["mean_score_delta"] - agree["mean_score_delta"]
-        print(f"  improvement-rate gap: {rate_diff*100:+.1f} pp (disagree − agree)")
-        print(f"  mean-score-delta gap: {delta_diff:+.2f} (disagree − agree)")
+        print(f"  improvement-rate gap: {rate_diff*100:+.1f} pp (disagree - agree)")
+        print(f"  mean-score-delta gap: {delta_diff:+.2f} (disagree - agree)")
         print()
         if rate_diff < -0.05 and delta_diff < 0:
             verdict = (
                 "Disagreement iterations improve less often AND by less on average.\n"
-                "  → Evidence SUPPORTS DBA: disagreement correlates with worse outcomes."
+                "  -> Evidence SUPPORTS DBA: disagreement correlates with worse outcomes."
             )
         elif rate_diff > 0.05 or delta_diff > 0:
             verdict = (
                 "Disagreement iterations do NOT look worse than agreement iterations.\n"
-                "  → Evidence does NOT support DBA in this domain — the direct prompt's\n"
+                "  -> Evidence does NOT support DBA in this domain -- the direct prompt's\n"
                 "    disagreement may just reflect it being a weaker prompt, not an\n"
                 "    independent reliability signal. Consider disabling DBA_ABSTENTION\n"
                 "    or gating it on repeated disagreement instead of a single one."

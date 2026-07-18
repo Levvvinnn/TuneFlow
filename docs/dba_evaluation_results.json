@@ -1,0 +1,147 @@
+{
+  "summary": {
+    "agree": {
+      "n": 4,
+      "improved_rate": 0.75,
+      "mean_score_delta": 9.986211318750236,
+      "median_score_delta": 11.885158487499552,
+      "stdev_score_delta": 30.911860780200882
+    },
+    "disagree_shadow": {
+      "n": 3,
+      "improved_rate": 0.3333333333333333,
+      "mean_score_delta": -131.97340974999995,
+      "median_score_delta": -191.51747837499988,
+      "stdev_score_delta": 129.3942545732182
+    },
+    "disagree_abstained": {
+      "n": 0
+    },
+    "no_dba_data": {
+      "n": 0
+    }
+  },
+  "rows": [
+    {
+      "run_id": "54ca47a3-7747-4356-8943-31860588a7ec",
+      "iteration_number": 1,
+      "bucket": "disagree_shadow",
+      "score_before": 923.958744025,
+      "score_after": 1144.835100125,
+      "improved": false,
+      "score_delta": -220.87635610000007,
+      "direct_bottleneck": "pool_exhaustion",
+      "decomposed_bottleneck": "slow_queries"
+    },
+    {
+      "run_id": "54ca47a3-7747-4356-8943-31860588a7ec",
+      "iteration_number": 2,
+      "bucket": "agree",
+      "score_before": 1144.835100125,
+      "score_after": 1099.2167746499997,
+      "improved": true,
+      "score_delta": 45.61832547500035,
+      "direct_bottleneck": "slow_queries",
+      "decomposed_bottleneck": "unknown"
+    },
+    {
+      "run_id": "54ca47a3-7747-4356-8943-31860588a7ec",
+      "iteration_number": 3,
+      "bucket": "agree",
+      "score_before": 1099.2167746499997,
+      "score_after": null,
+      "improved": null,
+      "score_delta": null,
+      "direct_bottleneck": "slow_queries",
+      "decomposed_bottleneck": "slow_queries"
+    },
+    {
+      "run_id": "b578e81c-8b9a-4b48-8ce4-93eddc4ee48a",
+      "iteration_number": 1,
+      "bucket": "disagree_shadow",
+      "score_before": 930.808522975,
+      "score_after": 1122.3260013499998,
+      "improved": false,
+      "score_delta": -191.51747837499988,
+      "direct_bottleneck": "pool_exhaustion",
+      "decomposed_bottleneck": "slow_queries"
+    },
+    {
+      "run_id": "b578e81c-8b9a-4b48-8ce4-93eddc4ee48a",
+      "iteration_number": 2,
+      "bucket": "agree",
+      "score_before": 1122.3260013499998,
+      "score_after": 1106.254897275,
+      "improved": true,
+      "score_delta": 16.071104074999766,
+      "direct_bottleneck": "slow_queries",
+      "decomposed_bottleneck": "slow_queries"
+    },
+    {
+      "run_id": "b578e81c-8b9a-4b48-8ce4-93eddc4ee48a",
+      "iteration_number": 3,
+      "bucket": "agree",
+      "score_before": 1106.254897275,
+      "score_after": null,
+      "improved": null,
+      "score_delta": null,
+      "direct_bottleneck": "slow_queries",
+      "decomposed_bottleneck": "unknown"
+    },
+    {
+      "run_id": "58bc3ee2-c212-45ad-82bd-0989c2a5e457",
+      "iteration_number": 1,
+      "bucket": "agree",
+      "score_before": 1121.6120753249993,
+      "score_after": 1113.912862425,
+      "improved": true,
+      "score_delta": 7.699212899999338,
+      "direct_bottleneck": "slow_queries",
+      "decomposed_bottleneck": "unknown"
+    },
+    {
+      "run_id": "58bc3ee2-c212-45ad-82bd-0989c2a5e457",
+      "iteration_number": 2,
+      "bucket": "agree",
+      "score_before": 1113.912862425,
+      "score_after": 1143.3566595999985,
+      "improved": false,
+      "score_delta": -29.443797174998508,
+      "direct_bottleneck": "slow_queries",
+      "decomposed_bottleneck": "slow_queries"
+    },
+    {
+      "run_id": "58bc3ee2-c212-45ad-82bd-0989c2a5e457",
+      "iteration_number": 3,
+      "bucket": "agree",
+      "score_before": 1143.3566595999985,
+      "score_after": null,
+      "improved": null,
+      "score_delta": null,
+      "direct_bottleneck": "slow_queries",
+      "decomposed_bottleneck": "unknown"
+    },
+    {
+      "run_id": "097db490-c5ba-4eeb-9bcc-43417f4ffd00",
+      "iteration_number": 1,
+      "bucket": "disagree_shadow",
+      "score_before": 982.2983900249999,
+      "score_after": 965.8247847999997,
+      "improved": true,
+      "score_delta": 16.473605225000142,
+      "direct_bottleneck": "slow_queries",
+      "decomposed_bottleneck": "pool_exhaustion"
+    },
+    {
+      "run_id": "097db490-c5ba-4eeb-9bcc-43417f4ffd00",
+      "iteration_number": 2,
+      "bucket": "agree",
+      "score_before": 965.8247847999997,
+      "score_after": null,
+      "improved": null,
+      "score_delta": null,
+      "direct_bottleneck": "slow_queries",
+      "decomposed_bottleneck": "slow_queries"
+    }
+  ]
+}

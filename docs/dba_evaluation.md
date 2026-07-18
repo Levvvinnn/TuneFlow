@@ -106,15 +106,59 @@ runs):
 python3 scripts/analyze_dba_outcomes.py --file run1.json --file run2.json
 ```
 
-## Status
+## Status: first real result (2026-07-18)
 
-Not yet run against live data — this sandbox has no Docker Compose stack or
-Fireworks AI credits to generate real shadow-mode runs. The instrumentation,
-scoring logic, and reporting are built and unit-tested (`tests/test_disagreement.py`,
-`tests/test_analyze_dba_outcomes.py`); a synthetic fixture confirms the
-script correctly detects a known effect when one is injected into the data,
-but that is a test of the *tool*, not evidence about DBA's real-world
-validity in this domain.
+Ran with `DBA_SHADOW_MODE=true` against a live Docker Compose stack
+(Fireworks AI, `deepseek-v4-flash`). Four 15-iteration multi-agent runs were
+launched; three completed cleanly (all terminated on `plateau` around
+iteration 3), one hit a `ConnectTimeout`/`429 RATE_LIMIT_EXCEEDED` from
+Fireworks under concurrent load and was excluded except for the iterations
+it completed before failing. Combined sample: **7 scored iterations — 4
+agree, 3 disagree (shadow-applied), 0 no-DBA-data** (confirming the
+disagreement check executed on every iteration). Raw data:
+[`dba_evaluation_results.json`](dba_evaluation_results.json).
 
-**Next step**: run `DBA_SHADOW_MODE=true` for several multi-agent runs
-against the live service and fill in real numbers here.
+| Bucket | n | improved next iteration | mean score delta |
+|---|---|---|---|
+| Agree | 4 | 75.0% | +9.99 |
+| Disagree (shadow) | 3 | 33.3% | −131.97 |
+
+Gap: −41.7pp improvement rate, −141.96 mean score delta (disagree − agree).
+`analyze_dba_outcomes.py`'s own verdict: *"Evidence SUPPORTS DBA: disagreement
+correlates with worse outcomes."*
+
+**A nuance worth being upfront about**, since it affects how much weight the
+agree-bucket number deserves: of the 4 scored "agree" rows, only 2 are
+genuine matching-bottleneck agreements (`slow_queries == slow_queries`,
+outcomes: one improved, one regressed — a wash). The other 2 are cases where
+the direct diagnosis returned `"unknown"`, which `check_diagnosis_agreement`
+treats as non-comparable and defaults into the agree bucket by design (see
+[Method](#the-adaptation) above) — both of those happened to improve. So the
+strong 75% agree-bucket number is partly inflated by non-comparable cases,
+not purely by confirmed agreement.
+
+The disagree-shadow bucket has no such artifact: all 3 rows are genuine
+conflicts between two named bottlenecks (`pool_exhaustion` vs `slow_queries`,
+twice, and the reverse once) — exactly the "confident conflict" case DBA is
+meant to catch, with no `unknown` noise diluting it. 2 of those 3 show large
+regressions (−220.9, −191.5); one improved slightly (+16.5). That the same
+`pool_exhaustion` vs `slow_queries` conflict recurred across two independent
+runs with similarly bad outcomes both times is a small point in favor of this
+being a real pattern rather than pure noise — but n=3 is still far too small
+to treat as confirmed.
+
+**Honest read**: directionally exactly what DBA predicts, and the
+disagreement sample itself is clean (no unknown-driven artifacts inflating
+it the way the agree bucket has), which is a mildly encouraging sign. But
+n=3 disagreements is not a result you can defend under any real scrutiny —
+this is "the effect is plausible and worth continuing to measure," not
+"DBA is validated." One rate-limited run and the fact that all four attempted
+runs terminated on `plateau` by iteration 3 (short by the 15-iteration budget)
+both point at the same fix: space runs out over time and consider raising
+`plateau_n` or lowering the plateau sensitivity so runs generate more
+iterations per run, since more iterations per run is cheaper than more runs
+(fewer cold-start iterations wasted, less exposure to Fireworks rate limits).
+
+**Next step**: repeat with a larger, rate-limit-respecting batch — e.g. 8-10
+runs launched a few minutes apart rather than concurrently — before treating
+this as a real conclusion rather than a promising first look.
