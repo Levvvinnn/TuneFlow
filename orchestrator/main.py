@@ -33,6 +33,7 @@ from store import (                                # persistence/store.py
 )
 from graph import run_multi_agent                  # agents/graph.py
 from baseline import run_baseline                  # agents/baseline.py
+from termination import score_from_metrics         # agents/termination.py
 
 # In-memory run status cache (supplements DB for live polling)
 _run_status: dict[str, dict] = {}
@@ -64,6 +65,19 @@ class StartRunRequest(BaseModel):
     vus: int = 100
     load_duration_seconds: int = 30
     load_repeats: int = 2
+
+    # Multi-objective config. objective_weights partially overrides the
+    # defaults {p95_latency_ms: 1.0, p99_latency_ms: 0.0, error_rate: 10000.0,
+    # throughput_rps: 0.0} — latency/error weights add to the score (lower
+    # metric = better), throughput weight subtracts (higher = better).
+    # min_throughput_rps / max_error_rate are soft constraints: violations
+    # add a large score penalty proportional to severity.
+    # Example: minimize p95 but keep RPS above 80 and errors below 1%:
+    #   {"objective_weights": {"p95_latency_ms": 1.0},
+    #    "min_throughput_rps": 80, "max_error_rate": 0.01}
+    objective_weights: Optional[dict] = None
+    min_throughput_rps: Optional[float] = None
+    max_error_rate: Optional[float] = None
 
 
 class RunStatusResponse(BaseModel):
@@ -101,7 +115,9 @@ async def _run_multi_agent_bg(run_id: str, req: StartRunRequest):
             """Wrap save_iteration to also update in-memory status."""
             it_num = kwargs.get("iteration_number", 0)
             metrics = kwargs.get("metrics", {})
-            score = metrics.get("p95_latency_ms", 0) + metrics.get("error_rate", 0) * 10000
+            score = score_from_metrics(
+                metrics, req.objective_weights, req.min_throughput_rps, req.max_error_rate
+            )
             _run_status[run_id]["current_iteration"] = it_num
             _run_status[run_id]["latest_score"] = score
             return await save_iteration(*args, **kwargs)
@@ -115,6 +131,9 @@ async def _run_multi_agent_bg(run_id: str, req: StartRunRequest):
             load_duration_seconds=req.load_duration_seconds,
             load_repeats=req.load_repeats,
             save_iteration_fn=_status_update_save_fn,
+            objective_weights=req.objective_weights,
+            min_throughput_rps=req.min_throughput_rps,
+            max_error_rate=req.max_error_rate,
         )
         if final.get("error"):
             # The graph caught its own exception in a node (config/judge/optimizer)
@@ -143,7 +162,9 @@ async def _run_baseline_bg(run_id: str, req: StartRunRequest):
         async def _status_save_fn(*args, **kwargs):
             it_num = kwargs.get("iteration_number", 0)
             metrics = kwargs.get("metrics", {})
-            score = metrics.get("p95_latency_ms", 0) + metrics.get("error_rate", 0) * 10000
+            score = score_from_metrics(
+                metrics, req.objective_weights, req.min_throughput_rps, req.max_error_rate
+            )
             _run_status[run_id]["current_iteration"] = it_num
             _run_status[run_id]["latest_score"] = score
             return await save_iteration(*args, **kwargs)
@@ -157,6 +178,9 @@ async def _run_baseline_bg(run_id: str, req: StartRunRequest):
             load_duration_seconds=req.load_duration_seconds,
             load_repeats=req.load_repeats,
             save_iteration_fn=_status_save_fn,
+            objective_weights=req.objective_weights,
+            min_throughput_rps=req.min_throughput_rps,
+            max_error_rate=req.max_error_rate,
         )
         if result.get("error"):
             err = result["error"]
@@ -177,11 +201,34 @@ async def _run_baseline_bg(run_id: str, req: StartRunRequest):
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
+ALLOWED_WEIGHT_KEYS = {"p95_latency_ms", "p99_latency_ms", "error_rate", "throughput_rps"}
+
+
 @app.post("/runs", status_code=202)
 async def start_run(req: StartRunRequest, background_tasks: BackgroundTasks):
     """Start a new tuning run (multi_agent or baseline) in the background."""
     if req.mode not in ("multi_agent", "baseline"):
         raise HTTPException(status_code=400, detail="mode must be 'multi_agent' or 'baseline'")
+
+    # Validate objective config — a typo'd weight key would otherwise be
+    # silently ignored and the run would optimize the wrong thing.
+    if req.objective_weights:
+        unknown = set(req.objective_weights) - ALLOWED_WEIGHT_KEYS
+        if unknown:
+            raise HTTPException(
+                status_code=400,
+                detail=f"unknown objective_weights keys: {sorted(unknown)}; allowed: {sorted(ALLOWED_WEIGHT_KEYS)}",
+            )
+        bad_vals = {k: v for k, v in req.objective_weights.items() if not isinstance(v, (int, float)) or v < 0}
+        if bad_vals:
+            raise HTTPException(
+                status_code=400,
+                detail=f"objective_weights values must be non-negative numbers, got: {bad_vals}",
+            )
+    if req.min_throughput_rps is not None and req.min_throughput_rps <= 0:
+        raise HTTPException(status_code=400, detail="min_throughput_rps must be > 0")
+    if req.max_error_rate is not None and not (0 < req.max_error_rate <= 1):
+        raise HTTPException(status_code=400, detail="max_error_rate must be in (0, 1]")
 
     run = await create_run(
         mode=req.mode,
