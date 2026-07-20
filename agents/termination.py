@@ -1,6 +1,7 @@
 """
-Shared termination module — used identically by multi-agent and baseline loops.
-Implements: target-hit / plateau-N / max-iterations.
+Shared termination + scoring module — used identically by multi-agent and
+baseline loops. Implements: target-hit / plateau-N / max-iterations, and the
+configurable multi-objective score that drives all three.
 """
 from dataclasses import dataclass
 from typing import Optional
@@ -68,8 +69,97 @@ def check_termination(
     return TerminationResult(should_stop=False, reason="")
 
 
-def score_from_metrics(metrics: dict) -> float:
-    """Convert a metrics dict to a single scalar score (lower is better)."""
-    p95 = metrics.get("p95_latency_ms", float("inf"))
-    err_rate = metrics.get("error_rate", 0.0)
-    return p95 + err_rate * 10000
+# ── Multi-objective scoring ──────────────────────────────────────────────────
+#
+# The score is a weighted combination of the four metrics the load test
+# already collects. Latency and error terms ADD to the score (lower metric =
+# better), throughput SUBTRACTS (higher metric = better). The defaults
+# reproduce the original single-objective behavior exactly:
+# score = p95 + error_rate * 10000.
+
+DEFAULT_OBJECTIVE_WEIGHTS = {
+    "p95_latency_ms": 1.0,
+    "p99_latency_ms": 0.0,
+    "error_rate": 10000.0,
+    "throughput_rps": 0.0,
+}
+
+# Soft-constraint penalty: a violated constraint adds this much, plus the same
+# amount again scaled by how badly it's violated. Large enough that a
+# constraint-violating config can essentially never look better than a
+# constraint-respecting one at realistic latencies, but still smooth — a config
+# that violates by 2x is scored worse than one violating by 10%, so the
+# optimizer gets a gradient back toward feasibility instead of a cliff.
+CONSTRAINT_PENALTY = 1000.0
+
+
+def score_from_metrics(
+    metrics: dict,
+    objective_weights: Optional[dict] = None,
+    min_throughput_rps: Optional[float] = None,
+    max_error_rate: Optional[float] = None,
+) -> float:
+    """
+    Convert a metrics dict to a single scalar score (lower is better).
+
+    objective_weights: partial override of DEFAULT_OBJECTIVE_WEIGHTS, e.g.
+        {"p95_latency_ms": 1.0, "p99_latency_ms": 0.5} to also penalize tail
+        latency, or {"throughput_rps": 2.0} to reward throughput.
+    min_throughput_rps / max_error_rate: soft constraints — violations add a
+        large penalty proportional to how badly they're violated.
+
+    With no arguments this is exactly the original: p95 + error_rate * 10000.
+    """
+    weights = {**DEFAULT_OBJECTIVE_WEIGHTS, **(objective_weights or {})}
+
+    score = 0.0
+    # Additive terms (lower metric = better). Skip zero-weight terms entirely
+    # so a missing metric defaulting to inf can't produce 0*inf = nan.
+    for key, default in (("p95_latency_ms", float("inf")), ("p99_latency_ms", 0.0), ("error_rate", 0.0)):
+        w = weights.get(key, 0.0)
+        if w:
+            score += w * metrics.get(key, default)
+    # Subtractive term (higher metric = better)
+    w_rps = weights.get("throughput_rps", 0.0)
+    if w_rps:
+        score -= w_rps * metrics.get("throughput_rps", 0.0)
+
+    # Soft constraints
+    rps = metrics.get("throughput_rps", 0.0)
+    err = metrics.get("error_rate", 0.0)
+    if min_throughput_rps is not None and min_throughput_rps > 0 and rps < min_throughput_rps:
+        shortfall = (min_throughput_rps - rps) / min_throughput_rps
+        score += CONSTRAINT_PENALTY * (1.0 + shortfall)
+    if max_error_rate is not None and err > max_error_rate:
+        excess = (err - max_error_rate) / max(max_error_rate, 1e-9)
+        score += CONSTRAINT_PENALTY * (1.0 + min(excess, 10.0))  # cap runaway excess
+
+    return score
+
+
+def describe_objective(
+    objective_weights: Optional[dict] = None,
+    min_throughput_rps: Optional[float] = None,
+    max_error_rate: Optional[float] = None,
+) -> str:
+    """Human/LLM-readable one-line description of the active objective, used in
+    agent prompts so the Optimizer knows what it is actually optimizing."""
+    weights = {**DEFAULT_OBJECTIVE_WEIGHTS, **(objective_weights or {})}
+    parts = []
+    if weights.get("p95_latency_ms"):
+        parts.append(f"minimize p95 latency (weight {weights['p95_latency_ms']:g})")
+    if weights.get("p99_latency_ms"):
+        parts.append(f"minimize p99 latency (weight {weights['p99_latency_ms']:g})")
+    if weights.get("error_rate"):
+        parts.append(f"minimize error rate (weight {weights['error_rate']:g})")
+    if weights.get("throughput_rps"):
+        parts.append(f"maximize throughput (weight {weights['throughput_rps']:g})")
+    desc = ", ".join(parts) if parts else "minimize p95 latency"
+    constraints = []
+    if min_throughput_rps is not None:
+        constraints.append(f"keep throughput >= {min_throughput_rps:g} req/s")
+    if max_error_rate is not None:
+        constraints.append(f"keep error rate <= {max_error_rate:g}")
+    if constraints:
+        desc += "; hard preferences: " + " and ".join(constraints)
+    return desc
