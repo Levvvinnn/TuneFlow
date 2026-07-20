@@ -21,8 +21,15 @@ async def propose_next_config(
     current_config: dict,
     judge_output: dict,
     iteration_history: list[dict],
+    objective: str = "minimize p95 latency (weight 1), minimize error rate (weight 10000)",
 ) -> dict:
-    """Propose the next config based on Judge's diagnosis."""
+    """Propose the next config based on Judge's diagnosis.
+
+    objective: one-line description of the run's optimization target (from
+    termination.describe_objective) — with configurable objective weights,
+    the Optimizer must know whether this run is chasing latency, throughput,
+    tail latency, or a constrained blend.
+    """
     text_diag = judge_output.get("text_diagnosis", {})
     vision_diag = judge_output.get("vision_diagnosis") or {}
     metrics = judge_output.get("metrics", {})
@@ -40,6 +47,10 @@ async def propose_next_config(
     ]
 
     prompt = f"""
+OPTIMIZATION OBJECTIVE for this run: {objective}
+All proposals must serve this objective — e.g. if the objective rewards
+throughput, do not sacrifice throughput to shave latency, and vice versa.
+
 Current service configuration:
 {json.dumps(current_config, indent=2)}
 

@@ -24,7 +24,7 @@ from langgraph.graph import END, StateGraph
 import config_agent as cfg_agent
 import judge_agent as judge
 import optimizer_agent as optimizer
-from termination import check_termination, score_from_metrics
+from termination import check_termination, describe_objective, score_from_metrics
 
 # ── State schema ──────────────────────────────────────────────────────────────
 
@@ -38,6 +38,11 @@ class AgentState(TypedDict):
     vus: int
     load_duration_seconds: int
     load_repeats: int
+
+    # Multi-objective config (None = original p95-focused defaults)
+    objective_weights: Optional[dict]
+    min_throughput_rps: Optional[float]
+    max_error_rate: Optional[float]
 
     current_config: dict
     proposed_config: Optional[dict]
@@ -116,6 +121,11 @@ async def optimizer_node(state: AgentState) -> dict:
             current_config=state["current_config"],
             judge_output=judge_out,
             iteration_history=state["iteration_history"],
+            objective=describe_objective(
+                state.get("objective_weights"),
+                state.get("min_throughput_rps"),
+                state.get("max_error_rate"),
+            ),
         )
         return {"optimizer_proposal": proposal, "error": None}
     except Exception as e:
@@ -262,7 +272,12 @@ async def persist_node(state: AgentState) -> dict:
     }
 
     new_history = state["iteration_history"] + [iteration_entry]
-    new_scores = state["scores"] + [score_from_metrics(metrics)]
+    new_scores = state["scores"] + [score_from_metrics(
+        metrics,
+        state.get("objective_weights"),
+        state.get("min_throughput_rps"),
+        state.get("max_error_rate"),
+    )]
 
     save_fn = state.get("_save_iteration")
     if save_fn:
@@ -365,6 +380,9 @@ async def run_multi_agent(
     load_duration_seconds: int = 30,
     load_repeats: int = 2,
     save_iteration_fn=None,
+    objective_weights: Optional[dict] = None,
+    min_throughput_rps: Optional[float] = None,
+    max_error_rate: Optional[float] = None,
 ) -> dict:
     """Entry point for a full multi-agent tuning run."""
     initial_state: AgentState = {
@@ -377,6 +395,9 @@ async def run_multi_agent(
         "vus": vus,
         "load_duration_seconds": load_duration_seconds,
         "load_repeats": load_repeats,
+        "objective_weights": objective_weights,
+        "min_throughput_rps": min_throughput_rps,
+        "max_error_rate": max_error_rate,
         "current_config": cfg_agent.DEFAULT_CONFIG.copy(),
         "proposed_config": None,
         "judge_output": None,

@@ -20,7 +20,7 @@ from runner import run_load_test_with_repeats
 from config_agent import DEFAULT_CONFIG, PARAM_BOUNDS, clamp_config
 from fireworks_client import baseline_god_agent_completion
 from judge_agent import apply_config
-from termination import check_termination, score_from_metrics
+from termination import check_termination, describe_objective, score_from_metrics
 
 SERVICE_URL = os.getenv("SERVICE_HOST", "http://localhost:8000")
 
@@ -36,6 +36,7 @@ async def god_agent_step(
     metrics: Optional[dict],
     iteration_history: list[dict],
     iteration_number: int,
+    objective: str = "minimize p95 latency. Keep p99 within 2x of p95, error_rate near 0, and throughput stable",
 ) -> dict:
     """Single Fireworks AI call: diagnose + propose next config in one shot."""
     history_summary = [
@@ -55,8 +56,7 @@ async def god_agent_step(
     prompt = f"""
 You are tuning a FastAPI + PostgreSQL service. This is iteration {iteration_number}.
 
-Objective: minimize p95 latency. Keep p99 within 2x of p95, error_rate near 0, and
-throughput stable. Only change parameters that directly address the identified bottleneck.
+Objective: {objective}. Only change parameters that directly address the identified bottleneck.
 
 Current configuration:
 {json.dumps(current_config, indent=2)}
@@ -110,11 +110,19 @@ async def run_baseline(
     load_duration_seconds: int = 30,
     load_repeats: int = 2,
     save_iteration_fn=None,
+    objective_weights: Optional[dict] = None,
+    min_throughput_rps: Optional[float] = None,
+    max_error_rate: Optional[float] = None,
 ) -> dict:
     """
     Run the single-agent baseline loop.
-    Same termination logic and load pattern as multi-agent — fair comparison.
+    Same termination logic, load pattern, AND objective as multi-agent — fair comparison.
     """
+    objective_desc = (
+        describe_objective(objective_weights, min_throughput_rps, max_error_rate)
+        if (objective_weights or min_throughput_rps is not None or max_error_rate is not None)
+        else "minimize p95 latency. Keep p99 within 2x of p95, error_rate near 0, and throughput stable"
+    )
     current_config = DEFAULT_CONFIG.copy()
     scores = []
     iteration_history = []
@@ -154,12 +162,15 @@ async def run_baseline(
                 metrics=last_metrics,
                 iteration_history=iteration_history,
                 iteration_number=iteration_number,
+                objective=objective_desc,
             )
         except Exception as e:
             print(f"[baseline] God agent failed: {e}", flush=True)
             decision = {"bottleneck": "error", "diagnosis": str(e), "next_config": current_config}
 
-        score = score_from_metrics(last_metrics)
+        score = score_from_metrics(
+            last_metrics, objective_weights, min_throughput_rps, max_error_rate
+        )
         scores.append(score)
 
         iteration_entry = {
