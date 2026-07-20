@@ -59,6 +59,7 @@ The loop is implemented as three specialized agents (**Config Agent**, **Judge A
 
 ## Scope
 
+- **Configurable multi-objective target.** By default the loop minimizes `p95 + error_rate×10000`, but the objective is configurable per run: `objective_weights` sets the relative importance of p95, p99, error rate, and throughput (throughput weight *rewards* higher RPS), and `min_throughput_rps` / `max_error_rate` add soft constraints whose violation is penalized proportionally to severity. Both the multi-agent loop and the baseline receive the same objective — in their scoring *and* in their prompts — so the head-to-head comparison stays fair for any objective.
 - **Fixed, controlled load only.** TuneFlow measures *relative configuration performance* at a fixed load (50–200 concurrent VUs). It does not predict or extrapolate to production-scale traffic.
 - **No full service restarts.** All changes go through `/admin/reconfigure` (hot-swap). This is by design — it isolates configuration quality from restart overhead.
 - **Five tunable parameters.** `pool_size`, `query_timeout_ms`, `cache_ttl_seconds`, `batch_size`, `retry_interval_ms`. The optimization loop and safety constraints are parameter-agnostic.
@@ -120,6 +121,14 @@ curl -X POST http://localhost:8080/runs \
 curl -X POST http://localhost:8080/runs \
   -H "Content-Type: application/json" \
   -d '{"mode":"baseline","max_iterations":15,"vus":100,"load_duration_seconds":30}'
+
+# Custom objective: minimize p95 AND reward throughput, but keep
+# RPS above 80 and errors below 1%
+curl -X POST http://localhost:8080/runs \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"multi_agent","max_iterations":15,"vus":100,
+       "objective_weights":{"p95_latency_ms":1.0,"throughput_rps":2.0},
+       "min_throughput_rps":80,"max_error_rate":0.01}'
 ```
 
 ### Tests

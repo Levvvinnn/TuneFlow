@@ -47,12 +47,30 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 
-def score_from_metrics(metrics: dict) -> float:
+def score_from_metrics(metrics: dict, objective_weights: Optional[dict] = None) -> float:
     """Same scoring as agents/termination.py — kept standalone so this script
-    has no import dependency on the agents package."""
-    p95 = metrics.get("p95_latency_ms", float("inf"))
-    err_rate = metrics.get("error_rate", 0.0)
-    return p95 + err_rate * 10000
+    has no import dependency on the agents package.
+
+    If the runs being analyzed used custom objective_weights, pass the SAME
+    weights via --weights so improvement is judged against the objective the
+    run was actually optimizing. Defaults reproduce p95 + error_rate*10000.
+    """
+    weights = {
+        "p95_latency_ms": 1.0,
+        "p99_latency_ms": 0.0,
+        "error_rate": 10000.0,
+        "throughput_rps": 0.0,
+        **(objective_weights or {}),
+    }
+    score = 0.0
+    for key, default in (("p95_latency_ms", float("inf")), ("p99_latency_ms", 0.0), ("error_rate", 0.0)):
+        w = weights.get(key, 0.0)
+        if w:
+            score += w * metrics.get(key, default)
+    w_rps = weights.get("throughput_rps", 0.0)
+    if w_rps:
+        score -= w_rps * metrics.get("throughput_rps", 0.0)
+    return score
 
 
 @dataclass
@@ -103,7 +121,9 @@ def classify_iteration(it: dict) -> tuple[str, Optional[str], Optional[str]]:
     return "disagree_shadow", direct_b, decomposed_b
 
 
-def build_outcome_rows(run_id: str, iterations: list[dict]) -> list[OutcomeRow]:
+def build_outcome_rows(
+    run_id: str, iterations: list[dict], objective_weights: Optional[dict] = None
+) -> list[OutcomeRow]:
     rows = []
     sorted_its = sorted(iterations, key=lambda x: x["iteration_number"])
     for idx, it in enumerate(sorted_its):
@@ -111,7 +131,7 @@ def build_outcome_rows(run_id: str, iterations: list[dict]) -> list[OutcomeRow]:
         if not metrics:
             continue
         bucket, direct_b, decomposed_b = classify_iteration(it)
-        score_before = score_from_metrics(metrics)
+        score_before = score_from_metrics(metrics, objective_weights)
 
         score_after = None
         improved = None
@@ -119,7 +139,7 @@ def build_outcome_rows(run_id: str, iterations: list[dict]) -> list[OutcomeRow]:
         if idx + 1 < len(sorted_its):
             next_metrics = sorted_its[idx + 1].get("metrics") or {}
             if next_metrics:
-                score_after = score_from_metrics(next_metrics)
+                score_after = score_from_metrics(next_metrics, objective_weights)
                 score_delta = score_before - score_after  # positive = improved
                 improved = score_delta > 0
 
@@ -230,18 +250,27 @@ def main() -> int:
     parser.add_argument("--run-id", action="append", default=[], help="Run ID to fetch from a live orchestrator (repeatable)")
     parser.add_argument("--api-url", default="http://localhost:8080", help="Orchestrator base URL (used with --run-id)")
     parser.add_argument("--json-out", default=None, help="Optional path to write the raw summary as JSON")
+    parser.add_argument(
+        "--weights", default=None,
+        help='JSON objective_weights the analyzed runs were launched with, e.g. '
+             '\'{"p95_latency_ms":1.0,"throughput_rps":2.0}\'. Must match the run '
+             "config or improvement will be judged against the wrong objective. "
+             "Omit for default-objective runs.",
+    )
     args = parser.parse_args()
 
     if not args.file and not args.run_id:
         parser.error("Provide at least one --file or --run-id")
 
+    objective_weights = json.loads(args.weights) if args.weights else None
+
     all_rows: list[OutcomeRow] = []
     for path in args.file:
         data = load_from_file(path)
-        all_rows.extend(build_outcome_rows(data.get("run_id", path), data.get("iterations", [])))
+        all_rows.extend(build_outcome_rows(data.get("run_id", path), data.get("iterations", []), objective_weights))
     for run_id in args.run_id:
         data = load_from_api(run_id, args.api_url)
-        all_rows.extend(build_outcome_rows(run_id, data.get("iterations", [])))
+        all_rows.extend(build_outcome_rows(run_id, data.get("iterations", []), objective_weights))
 
     summary = summarize(all_rows)
     print_report(all_rows, summary)
